@@ -1,0 +1,165 @@
+from time import perf_counter
+
+from app.core.config import Settings
+from app.graph.builder import SchemaGraphBuilder
+from app.graph.traverser import GraphTraverser
+from app.projection.budget import BudgetRouter
+from app.projection.linker import SchemaLinker
+from app.projection.projector import SchemaProjector
+from app.projection.pruner import SchemaPruner
+from app.retrieval.base import build_corpus, normalize_text
+from app.retrieval.hybrid import HybridRetriever
+from app.schema.models import OrmSchema, ProjectionDebug, ProjectionMetrics, ProjectionOptions, ProjectionResponse
+
+
+class SchemaProjectionPipeline:
+    def __init__(self, schema: OrmSchema, settings: Settings) -> None:
+        self.schema = schema
+        self.settings = settings
+        self.graph = SchemaGraphBuilder().build(schema)
+        self.traverser = GraphTraverser(self.graph, schema)
+        self.retriever = HybridRetriever(
+            build_corpus(schema),
+            embedding_model=settings.embedding_model,
+            enable_dense=settings.enable_dense_retrieval,
+        )
+        self.budget_router = BudgetRouter(settings)
+        self.linker = SchemaLinker()
+        self.pruner = SchemaPruner()
+        self.projector = SchemaProjector()
+
+    def run(self, query: str, options: ProjectionOptions) -> ProjectionResponse:
+        started = perf_counter()
+        normalized_query = normalize_text(query)
+        budget = self.budget_router.route(normalized_query, options)
+
+        retrieval_started = perf_counter()
+        candidates = self.retriever.retrieve(
+            normalized_query,
+            top_k_bm25=budget.top_k_bm25,
+            top_k_dense=budget.top_k_dense,
+            top_k_final=budget.top_k_final,
+        )
+        retrieval_ms = (perf_counter() - retrieval_started) * 1000
+
+        linked_models, linked_fields, _confidence = self.linker.link(candidates)
+        if not linked_models and self.schema.models:
+            linked_models = {next(iter(self.schema.models))}
+        anchor_model = self._anchor_model(candidates, linked_models)
+
+        graph_started = perf_counter()
+        connected_models, relation_fields, paths = self._connect_from_anchor(anchor_model, linked_models, budget.max_depth)
+        selected_model_set = (linked_models | connected_models) & set(self.schema.models)
+        selected_models = self._ordered_models(anchor_model, selected_model_set, candidates)
+        graph_ms = (perf_counter() - graph_started) * 1000
+
+        projection_started = perf_counter()
+        pruned_fields, removed_fields = self.pruner.prune(
+            self.schema,
+            selected_models,
+            linked_fields,
+            relation_fields,
+            budget,
+        )
+        safe_fields, hallucinated_models, hallucinated_fields = self._validate(pruned_fields)
+        projected = self.projector.project(self.schema, safe_fields, preferred_roots=[anchor_model] if anchor_model else None)
+        projection_ms = (perf_counter() - projection_started) * 1000
+
+        total_fields_before = sum(len(model.fields) for model in self.schema.models.values())
+        total_fields_after = sum(len(fields) for fields in safe_fields.values())
+        reduction_ratio = 1 - (total_fields_after / total_fields_before) if total_fields_before else 0
+        latency_ms = (perf_counter() - started) * 1000
+
+        metrics = ProjectionMetrics(
+            latency_ms=round(latency_ms, 3),
+            retrieval_ms=round(retrieval_ms, 3),
+            graph_ms=round(graph_ms, 3),
+            projection_ms=round(projection_ms, 3),
+            total_fields_before=total_fields_before,
+            total_fields_after=total_fields_after,
+            reduction_ratio=round(reduction_ratio, 4),
+            hallucinated_models=hallucinated_models,
+            hallucinated_fields=hallucinated_fields,
+        )
+
+        debug = None
+        if options.debug:
+            debug = ProjectionDebug(
+                retrieval=candidates,
+                paths=paths,
+                removed_fields=removed_fields,
+                metrics=metrics,
+            )
+
+        return ProjectionResponse(query=query, models=list(safe_fields.keys()), schema=projected, debug=debug)
+
+    def _anchor_model(self, candidates: list, linked_models: set[str]) -> str | None:
+        for candidate in candidates:
+            if candidate.kind == "model" and candidate.model in linked_models:
+                return candidate.model
+        for candidate in candidates:
+            if candidate.model in linked_models:
+                return candidate.model
+        return next(iter(linked_models), None)
+
+    def _connect_from_anchor(
+        self,
+        anchor_model: str | None,
+        linked_models: set[str],
+        max_depth: int,
+    ) -> tuple[set[str], dict[str, set[str]], list[list[str]]]:
+        if not anchor_model:
+            return self.traverser.connect_models(linked_models, max_depth)
+
+        selected = set(linked_models)
+        relation_fields: dict[str, set[str]] = {}
+        paths: list[list[str]] = []
+        for target in linked_models:
+            if target == anchor_model:
+                continue
+            path = self.traverser.shortest_model_path(anchor_model, target)
+            if not path or len(path) - 1 > max_depth:
+                continue
+            paths.append(path)
+            selected.update(path)
+            for model, fields in self.traverser.relation_fields_for_path(path).items():
+                relation_fields.setdefault(model, set()).update(fields)
+
+        return selected, relation_fields, paths
+
+    def _ordered_models(self, anchor_model: str | None, selected_models: set[str], candidates: list) -> list[str]:
+        ordered: list[str] = []
+        if anchor_model in selected_models:
+            ordered.append(anchor_model)
+        for candidate in candidates:
+            if candidate.model in selected_models and candidate.model not in ordered:
+                ordered.append(candidate.model)
+        for model_name in selected_models:
+            if model_name not in ordered:
+                ordered.append(model_name)
+        return ordered
+
+    def _validate(self, selected_fields: dict[str, set[str]]) -> tuple[dict[str, set[str]], int, int]:
+        safe: dict[str, set[str]] = {}
+        hallucinated_models = 0
+        hallucinated_fields = 0
+
+        for model_name, fields in selected_fields.items():
+            model = self.schema.models.get(model_name)
+            if not model:
+                hallucinated_models += 1
+                continue
+            safe[model_name] = set()
+            for field_name in fields:
+                field = model.fields.get(field_name)
+                if not field:
+                    hallucinated_fields += 1
+                    continue
+                if field.relation and field.relation not in self.schema.models:
+                    hallucinated_fields += 1
+                    continue
+                safe[model_name].add(field_name)
+
+        return safe, hallucinated_models, hallucinated_fields
+
+

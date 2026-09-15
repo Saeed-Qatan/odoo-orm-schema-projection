@@ -1,0 +1,602 @@
+{
+  "nodes": [
+    {
+      "id": "model:res.partner",
+      "kind": "model",
+      "model": "res.partner"
+    },
+    {
+      "id": "field:res.partner.id",
+      "kind": "field",
+      "model": "res.partner",
+      "field": "id",
+      "field_type": "integer",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:res.partner.name",
+      "kind": "field",
+      "model": "res.partner",
+      "field": "name",
+      "field_type": "char",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:res.partner.email",
+      "kind": "field",
+      "model": "res.partner",
+      "field": "email",
+      "field_type": "char",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:res.partner.phone",
+      "kind": "field",
+      "model": "res.partner",
+      "field": "phone",
+      "field_type": "char",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:res.partner.customer_rank",
+      "kind": "field",
+      "model": "res.partner",
+      "field": "customer_rank",
+      "field_type": "integer",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:res.partner.supplier_rank",
+      "kind": "field",
+      "model": "res.partner",
+      "field": "supplier_rank",
+      "field_type": "integer",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:res.partner.sale_order_ids",
+      "kind": "field",
+      "model": "res.partner",
+      "field": "sale_order_ids",
+      "field_type": "one2many",
+      "relation": "sale.order",
+      "inferred": true
+    },
+    {
+      "id": "model:sale.order",
+      "kind": "model",
+      "model": "sale.order"
+    },
+    {
+      "id": "model:product.product",
+      "kind": "model",
+      "model": "product.product"
+    },
+    {
+      "id": "field:product.product.id",
+      "kind": "field",
+      "model": "product.product",
+      "field": "id",
+      "field_type": "integer",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:product.product.name",
+      "kind": "field",
+      "model": "product.product",
+      "field": "name",
+      "field_type": "char",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:product.product.default_code",
+      "kind": "field",
+      "model": "product.product",
+      "field": "default_code",
+      "field_type": "char",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:product.product.sale_order_line_ids",
+      "kind": "field",
+      "model": "product.product",
+      "field": "sale_order_line_ids",
+      "field_type": "one2many",
+      "relation": "sale.order.line",
+      "inferred": true
+    },
+    {
+      "id": "model:sale.order.line",
+      "kind": "model",
+      "model": "sale.order.line"
+    },
+    {
+      "id": "field:sale.order.id",
+      "kind": "field",
+      "model": "sale.order",
+      "field": "id",
+      "field_type": "integer",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:sale.order.name",
+      "kind": "field",
+      "model": "sale.order",
+      "field": "name",
+      "field_type": "char",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:sale.order.date_order",
+      "kind": "field",
+      "model": "sale.order",
+      "field": "date_order",
+      "field_type": "datetime",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:sale.order.partner_id",
+      "kind": "field",
+      "model": "sale.order",
+      "field": "partner_id",
+      "field_type": "many2one",
+      "relation": "res.partner",
+      "inferred": false
+    },
+    {
+      "id": "field:sale.order.user_id",
+      "kind": "field",
+      "model": "sale.order",
+      "field": "user_id",
+      "field_type": "integer",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:sale.order.amount_total",
+      "kind": "field",
+      "model": "sale.order",
+      "field": "amount_total",
+      "field_type": "float",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:sale.order.state",
+      "kind": "field",
+      "model": "sale.order",
+      "field": "state",
+      "field_type": "char",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:sale.order.sale_order_line_ids",
+      "kind": "field",
+      "model": "sale.order",
+      "field": "sale_order_line_ids",
+      "field_type": "one2many",
+      "relation": "sale.order.line",
+      "inferred": true
+    },
+    {
+      "id": "field:sale.order.line.id",
+      "kind": "field",
+      "model": "sale.order.line",
+      "field": "id",
+      "field_type": "integer",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:sale.order.line.order_id",
+      "kind": "field",
+      "model": "sale.order.line",
+      "field": "order_id",
+      "field_type": "many2one",
+      "relation": "sale.order",
+      "inferred": false
+    },
+    {
+      "id": "field:sale.order.line.product_id",
+      "kind": "field",
+      "model": "sale.order.line",
+      "field": "product_id",
+      "field_type": "many2one",
+      "relation": "product.product",
+      "inferred": false
+    },
+    {
+      "id": "field:sale.order.line.product_uom_qty",
+      "kind": "field",
+      "model": "sale.order.line",
+      "field": "product_uom_qty",
+      "field_type": "float",
+      "relation": null,
+      "inferred": false
+    },
+    {
+      "id": "field:sale.order.line.price_unit",
+      "kind": "field",
+      "model": "sale.order.line",
+      "field": "price_unit",
+      "field_type": "float",
+      "relation": null,
+      "inferred": false
+    }
+  ],
+  "edges": [
+    {
+      "source": "model:res.partner",
+      "target": "field:res.partner.id",
+      "kind": "contains",
+      "field": "id"
+    },
+    {
+      "source": "model:res.partner",
+      "target": "field:res.partner.name",
+      "kind": "contains",
+      "field": "name"
+    },
+    {
+      "source": "model:res.partner",
+      "target": "field:res.partner.email",
+      "kind": "contains",
+      "field": "email"
+    },
+    {
+      "source": "model:res.partner",
+      "target": "field:res.partner.phone",
+      "kind": "contains",
+      "field": "phone"
+    },
+    {
+      "source": "model:res.partner",
+      "target": "field:res.partner.customer_rank",
+      "kind": "contains",
+      "field": "customer_rank"
+    },
+    {
+      "source": "model:res.partner",
+      "target": "field:res.partner.supplier_rank",
+      "kind": "contains",
+      "field": "supplier_rank"
+    },
+    {
+      "source": "model:res.partner",
+      "target": "field:res.partner.sale_order_ids",
+      "kind": "contains",
+      "field": "sale_order_ids"
+    },
+    {
+      "source": "model:res.partner",
+      "target": "model:sale.order",
+      "kind": "model_relation",
+      "relation_type": "one2many",
+      "field": "sale_order_ids",
+      "inferred": true
+    },
+    {
+      "source": "field:res.partner.id",
+      "target": "model:res.partner",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:res.partner.name",
+      "target": "model:res.partner",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:res.partner.email",
+      "target": "model:res.partner",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:res.partner.phone",
+      "target": "model:res.partner",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:res.partner.customer_rank",
+      "target": "model:res.partner",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:res.partner.supplier_rank",
+      "target": "model:res.partner",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:res.partner.sale_order_ids",
+      "target": "model:res.partner",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:res.partner.sale_order_ids",
+      "target": "model:sale.order",
+      "kind": "relation",
+      "relation_type": "one2many",
+      "field": "sale_order_ids",
+      "inferred": true
+    },
+    {
+      "source": "model:sale.order",
+      "target": "field:sale.order.id",
+      "kind": "contains",
+      "field": "id"
+    },
+    {
+      "source": "model:sale.order",
+      "target": "field:sale.order.name",
+      "kind": "contains",
+      "field": "name"
+    },
+    {
+      "source": "model:sale.order",
+      "target": "field:sale.order.date_order",
+      "kind": "contains",
+      "field": "date_order"
+    },
+    {
+      "source": "model:sale.order",
+      "target": "field:sale.order.partner_id",
+      "kind": "contains",
+      "field": "partner_id"
+    },
+    {
+      "source": "model:sale.order",
+      "target": "model:res.partner",
+      "kind": "model_relation",
+      "relation_type": "many2one",
+      "field": "partner_id",
+      "inferred": false
+    },
+    {
+      "source": "model:sale.order",
+      "target": "field:sale.order.user_id",
+      "kind": "contains",
+      "field": "user_id"
+    },
+    {
+      "source": "model:sale.order",
+      "target": "field:sale.order.amount_total",
+      "kind": "contains",
+      "field": "amount_total"
+    },
+    {
+      "source": "model:sale.order",
+      "target": "field:sale.order.state",
+      "kind": "contains",
+      "field": "state"
+    },
+    {
+      "source": "model:sale.order",
+      "target": "field:sale.order.sale_order_line_ids",
+      "kind": "contains",
+      "field": "sale_order_line_ids"
+    },
+    {
+      "source": "model:sale.order",
+      "target": "model:sale.order.line",
+      "kind": "model_relation",
+      "relation_type": "one2many",
+      "field": "sale_order_line_ids",
+      "inferred": true
+    },
+    {
+      "source": "model:product.product",
+      "target": "field:product.product.id",
+      "kind": "contains",
+      "field": "id"
+    },
+    {
+      "source": "model:product.product",
+      "target": "field:product.product.name",
+      "kind": "contains",
+      "field": "name"
+    },
+    {
+      "source": "model:product.product",
+      "target": "field:product.product.default_code",
+      "kind": "contains",
+      "field": "default_code"
+    },
+    {
+      "source": "model:product.product",
+      "target": "field:product.product.sale_order_line_ids",
+      "kind": "contains",
+      "field": "sale_order_line_ids"
+    },
+    {
+      "source": "model:product.product",
+      "target": "model:sale.order.line",
+      "kind": "model_relation",
+      "relation_type": "one2many",
+      "field": "sale_order_line_ids",
+      "inferred": true
+    },
+    {
+      "source": "field:product.product.id",
+      "target": "model:product.product",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:product.product.name",
+      "target": "model:product.product",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:product.product.default_code",
+      "target": "model:product.product",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:product.product.sale_order_line_ids",
+      "target": "model:product.product",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:product.product.sale_order_line_ids",
+      "target": "model:sale.order.line",
+      "kind": "relation",
+      "relation_type": "one2many",
+      "field": "sale_order_line_ids",
+      "inferred": true
+    },
+    {
+      "source": "model:sale.order.line",
+      "target": "field:sale.order.line.id",
+      "kind": "contains",
+      "field": "id"
+    },
+    {
+      "source": "model:sale.order.line",
+      "target": "field:sale.order.line.order_id",
+      "kind": "contains",
+      "field": "order_id"
+    },
+    {
+      "source": "model:sale.order.line",
+      "target": "model:sale.order",
+      "kind": "model_relation",
+      "relation_type": "many2one",
+      "field": "order_id",
+      "inferred": false
+    },
+    {
+      "source": "model:sale.order.line",
+      "target": "field:sale.order.line.product_id",
+      "kind": "contains",
+      "field": "product_id"
+    },
+    {
+      "source": "model:sale.order.line",
+      "target": "model:product.product",
+      "kind": "model_relation",
+      "relation_type": "many2one",
+      "field": "product_id",
+      "inferred": false
+    },
+    {
+      "source": "model:sale.order.line",
+      "target": "field:sale.order.line.product_uom_qty",
+      "kind": "contains",
+      "field": "product_uom_qty"
+    },
+    {
+      "source": "model:sale.order.line",
+      "target": "field:sale.order.line.price_unit",
+      "kind": "contains",
+      "field": "price_unit"
+    },
+    {
+      "source": "field:sale.order.id",
+      "target": "model:sale.order",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.name",
+      "target": "model:sale.order",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.date_order",
+      "target": "model:sale.order",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.partner_id",
+      "target": "model:sale.order",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.partner_id",
+      "target": "model:res.partner",
+      "kind": "relation",
+      "relation_type": "many2one",
+      "field": "partner_id",
+      "inferred": false
+    },
+    {
+      "source": "field:sale.order.user_id",
+      "target": "model:sale.order",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.amount_total",
+      "target": "model:sale.order",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.state",
+      "target": "model:sale.order",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.sale_order_line_ids",
+      "target": "model:sale.order",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.sale_order_line_ids",
+      "target": "model:sale.order.line",
+      "kind": "relation",
+      "relation_type": "one2many",
+      "field": "sale_order_line_ids",
+      "inferred": true
+    },
+    {
+      "source": "field:sale.order.line.id",
+      "target": "model:sale.order.line",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.line.order_id",
+      "target": "model:sale.order.line",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.line.order_id",
+      "target": "model:sale.order",
+      "kind": "relation",
+      "relation_type": "many2one",
+      "field": "order_id",
+      "inferred": false
+    },
+    {
+      "source": "field:sale.order.line.product_id",
+      "target": "model:sale.order.line",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.line.product_id",
+      "target": "model:product.product",
+      "kind": "relation",
+      "relation_type": "many2one",
+      "field": "product_id",
+      "inferred": false
+    },
+    {
+      "source": "field:sale.order.line.product_uom_qty",
+      "target": "model:sale.order.line",
+      "kind": "belongs_to"
+    },
+    {
+      "source": "field:sale.order.line.price_unit",
+      "target": "model:sale.order.line",
+      "kind": "belongs_to"
+    }
+  ]
+}

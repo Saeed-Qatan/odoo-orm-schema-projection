@@ -1,0 +1,484 @@
+{
+  "models": {
+    "res.partner": {
+      "name": "res.partner",
+      "table": "res_partner",
+      "description": "Odoo-like model mapped from PostgreSQL table res_partner.",
+      "keywords": [
+        "res.partner",
+        "res_partner",
+        "customer",
+        "client",
+        "partner",
+        "عميل",
+        "زبون",
+        "جهة اتصال"
+      ],
+      "fields": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "column": "id",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field id from column id.",
+          "keywords": [
+            "id"
+          ]
+        },
+        "name": {
+          "name": "name",
+          "type": "char",
+          "column": "name",
+          "relation": null,
+          "inverse": null,
+          "required": true,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field name from column name.",
+          "keywords": [
+            "name",
+            "name",
+            "اسم",
+            "الاسم"
+          ]
+        },
+        "email": {
+          "name": "email",
+          "type": "char",
+          "column": "email",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field email from column email.",
+          "keywords": [
+            "email"
+          ]
+        },
+        "phone": {
+          "name": "phone",
+          "type": "char",
+          "column": "phone",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field phone from column phone.",
+          "keywords": [
+            "phone"
+          ]
+        },
+        "customer_rank": {
+          "name": "customer_rank",
+          "type": "integer",
+          "column": "customer_rank",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field customer_rank from column customer_rank.",
+          "keywords": [
+            "customer_rank"
+          ]
+        },
+        "supplier_rank": {
+          "name": "supplier_rank",
+          "type": "integer",
+          "column": "supplier_rank",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field supplier_rank from column supplier_rank.",
+          "keywords": [
+            "supplier_rank"
+          ]
+        },
+        "sale_order_ids": {
+          "name": "sale_order_ids",
+          "type": "one2many",
+          "column": null,
+          "relation": "sale.order",
+          "inverse": "partner_id",
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": true,
+          "description": "Inferred one2many relation to sale.order through partner_id.",
+          "keywords": [
+            "sale_order_ids",
+            "sale.order",
+            "partner_id"
+          ]
+        }
+      }
+    },
+    "product.product": {
+      "name": "product.product",
+      "table": "product_product",
+      "description": "Odoo-like model mapped from PostgreSQL table product_product.",
+      "keywords": [
+        "product.product",
+        "product_product",
+        "product",
+        "item",
+        "منتج",
+        "صنف"
+      ],
+      "fields": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "column": "id",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field id from column id.",
+          "keywords": [
+            "id"
+          ]
+        },
+        "name": {
+          "name": "name",
+          "type": "char",
+          "column": "name",
+          "relation": null,
+          "inverse": null,
+          "required": true,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field name from column name.",
+          "keywords": [
+            "name",
+            "name",
+            "اسم",
+            "الاسم"
+          ]
+        },
+        "default_code": {
+          "name": "default_code",
+          "type": "char",
+          "column": "default_code",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field default_code from column default_code.",
+          "keywords": [
+            "default_code"
+          ]
+        },
+        "sale_order_line_ids": {
+          "name": "sale_order_line_ids",
+          "type": "one2many",
+          "column": null,
+          "relation": "sale.order.line",
+          "inverse": "product_id",
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": true,
+          "description": "Inferred one2many relation to sale.order.line through product_id.",
+          "keywords": [
+            "sale_order_line_ids",
+            "sale.order.line",
+            "product_id"
+          ]
+        }
+      }
+    },
+    "sale.order": {
+      "name": "sale.order",
+      "table": "sale_order",
+      "description": "Odoo-like model mapped from PostgreSQL table sale_order.",
+      "keywords": [
+        "sale.order",
+        "sale_order",
+        "sales",
+        "sale",
+        "مبيعات",
+        "طلب بيع",
+        "أمر بيع"
+      ],
+      "fields": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "column": "id",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field id from column id.",
+          "keywords": [
+            "id"
+          ]
+        },
+        "name": {
+          "name": "name",
+          "type": "char",
+          "column": "name",
+          "relation": null,
+          "inverse": null,
+          "required": true,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field name from column name.",
+          "keywords": [
+            "name",
+            "name",
+            "اسم",
+            "الاسم"
+          ]
+        },
+        "date_order": {
+          "name": "date_order",
+          "type": "datetime",
+          "column": "date_order",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field date_order from column date_order.",
+          "keywords": [
+            "date_order",
+            "date",
+            "order date",
+            "تاريخ",
+            "تاريخ الطلب",
+            "يناير",
+            "فبراير",
+            "مارس",
+            "أبريل",
+            "ابريل",
+            "مايو",
+            "يونيو",
+            "يوليو",
+            "أغسطس",
+            "اغسطس",
+            "سبتمبر",
+            "أكتوبر",
+            "اكتوبر",
+            "نوفمبر",
+            "ديسمبر"
+          ]
+        },
+        "partner_id": {
+          "name": "partner_id",
+          "type": "many2one",
+          "column": "partner_id",
+          "relation": "res.partner",
+          "inverse": null,
+          "required": true,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Many2one relation to res.partner.",
+          "keywords": [
+            "partner_id",
+            "customer",
+            "client",
+            "partner",
+            "عميل",
+            "زبون"
+          ]
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "integer",
+          "column": "user_id",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field user_id from column user_id.",
+          "keywords": [
+            "user_id",
+            "salesperson",
+            "user",
+            "مندوب",
+            "البائع",
+            "أحمد",
+            "احمد"
+          ]
+        },
+        "amount_total": {
+          "name": "amount_total",
+          "type": "float",
+          "column": "amount_total",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field amount_total from column amount_total.",
+          "keywords": [
+            "amount_total",
+            "total",
+            "amount",
+            "إجمالي",
+            "مبلغ"
+          ]
+        },
+        "state": {
+          "name": "state",
+          "type": "char",
+          "column": "state",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field state from column state.",
+          "keywords": [
+            "state"
+          ]
+        },
+        "sale_order_line_ids": {
+          "name": "sale_order_line_ids",
+          "type": "one2many",
+          "column": null,
+          "relation": "sale.order.line",
+          "inverse": "order_id",
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": true,
+          "description": "Inferred one2many relation to sale.order.line through order_id.",
+          "keywords": [
+            "sale_order_line_ids",
+            "sale.order.line",
+            "order_id"
+          ]
+        }
+      }
+    },
+    "sale.order.line": {
+      "name": "sale.order.line",
+      "table": "sale_order_line",
+      "description": "Odoo-like model mapped from PostgreSQL table sale_order_line.",
+      "keywords": [
+        "sale.order.line",
+        "sale_order_line",
+        "sales line",
+        "order line",
+        "سطر البيع",
+        "بنود البيع"
+      ],
+      "fields": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "column": "id",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field id from column id.",
+          "keywords": [
+            "id"
+          ]
+        },
+        "order_id": {
+          "name": "order_id",
+          "type": "many2one",
+          "column": "order_id",
+          "relation": "sale.order",
+          "inverse": null,
+          "required": true,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Many2one relation to sale.order.",
+          "keywords": [
+            "order_id"
+          ]
+        },
+        "product_id": {
+          "name": "product_id",
+          "type": "many2one",
+          "column": "product_id",
+          "relation": "product.product",
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Many2one relation to product.product.",
+          "keywords": [
+            "product_id",
+            "product",
+            "item",
+            "منتج",
+            "صنف"
+          ]
+        },
+        "product_uom_qty": {
+          "name": "product_uom_qty",
+          "type": "float",
+          "column": "product_uom_qty",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field product_uom_qty from column product_uom_qty.",
+          "keywords": [
+            "product_uom_qty",
+            "quantity",
+            "qty",
+            "كمية",
+            "الكمية"
+          ]
+        },
+        "price_unit": {
+          "name": "price_unit",
+          "type": "float",
+          "column": "price_unit",
+          "relation": null,
+          "inverse": null,
+          "required": false,
+          "readonly": false,
+          "store": true,
+          "inferred": false,
+          "description": "Field price_unit from column price_unit.",
+          "keywords": [
+            "price_unit"
+          ]
+        }
+      }
+    }
+  }
+}
