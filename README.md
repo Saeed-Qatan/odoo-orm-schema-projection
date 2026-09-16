@@ -78,5 +78,27 @@ Latest local check:
 ```
 
 Result: 6 passed, with zero hallucinated models/fields in the projection test and API check latency around 1-2 ms on the sample.
+## Evaluation
 
+Run the local golden-set evaluation:
+
+```bash
+.\.venv\Scripts\python.exe -m app.evaluation.runner
+```
+
+The runner writes `data/processed/evaluation_report.json` and reports model/field precision and recall, relationship validity, reduction ratio, P50/P95 latency, hallucination count, and over-selection count.
+
+Current local golden-set snapshot:
+
+- 20 cases.
+- Model precision/recall: 1.0 / 1.0.
+- Field precision/recall: 1.0 / 1.0.
+- Relationship validity: 1.0.
+- Hallucination count: 0.
+- Over-selection count: 0.
+- P95 latency: about 1 ms on the focused sample.
+
+## Alias Configuration
+
+Query understanding and schema keywords are driven by `data/config/schema_aliases.json`. Update that file to add Arabic/English synonyms, entities, months, filters, and model/field aliases without changing Python code.
 

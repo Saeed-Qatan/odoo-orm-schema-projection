@@ -283,3 +283,31 @@ data/
 - أول نسخة تعتمد على `BM25 + Dense + Fuzzy + RRF + NetworkX Traversal`.
 - `PPR` مرحلة تحسين لاحقة، وليست شرطًا لأول demo.
 - الأولوية في التقييم: السرعة خلال `1.5s`، منع الهلوسة، صحة العلاقات، تقليل حجم الـSchema، ثم تحسين الـranking.
+## حالة التنفيذ الحالية
+
+تم تثبيت مرحلة Backend Prototype الأساسية:
+
+- نقل aliases إلى `data/config/schema_aliases.json`.
+- إضافة `AliasCatalog` لتحميل aliases من JSON.
+- تطوير `QueryUnderstandingExtractor` ليغطي النية، الكيانات، الفلاتر، والحقول المطلوبة.
+- تفعيل `pglast` كمسار parsing أساسي مع fallback إلى regex.
+- إضافة traversal guard بحيث لا يدخل النظام Models إلا إذا كانت مطلوبة أو bridge ضروري لمسار علاقة.
+- تحسين Field-level pruning ومنع الحقول الزائدة في السيناريوهات المغطاة.
+- إضافة Golden Set من 20 سؤالًا.
+- إضافة `app/evaluation/runner.py` لتوليد `data/processed/evaluation_report.json`.
+- تحديث المقاييس لتقرأ nested fields وتقيس relationship validity وover-selection.
+
+أوامر التحقق الحالية:
+
+```bash
+.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\python.exe -m app.evaluation.runner
+```
+
+المتبقي لاحقًا:
+
+- إدخال Odoo schema أكبر يحتوي sales modules حقيقية.
+- توسيع aliases لسيناريوهات Odoo أكثر.
+- تقييم dense retrieval عند الحاجة فقط.
+- بناء UI اختيارية للتجربة.
+

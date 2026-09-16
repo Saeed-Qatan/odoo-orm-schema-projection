@@ -6,10 +6,11 @@ from app.graph.traverser import GraphTraverser
 from app.projection.budget import BudgetRouter
 from app.projection.linker import SchemaLinker
 from app.projection.projector import SchemaProjector
+from app.projection.query_understanding import QueryUnderstandingExtractor
 from app.projection.pruner import SchemaPruner
 from app.retrieval.base import build_corpus, normalize_text
 from app.retrieval.hybrid import HybridRetriever
-from app.schema.models import OrmSchema, ProjectionDebug, ProjectionMetrics, ProjectionOptions, ProjectionResponse
+from app.schema.models import ConfidenceScores, OrmSchema, ProjectionDebug, ProjectionMetrics, ProjectionOptions, ProjectionResponse, RelationshipPath
 
 
 class SchemaProjectionPipeline:
@@ -27,10 +28,12 @@ class SchemaProjectionPipeline:
         self.linker = SchemaLinker()
         self.pruner = SchemaPruner()
         self.projector = SchemaProjector()
+        self.query_understanding = QueryUnderstandingExtractor()
 
     def run(self, query: str, options: ProjectionOptions) -> ProjectionResponse:
         started = perf_counter()
         normalized_query = normalize_text(query)
+        understanding = self.query_understanding.understand(query)
         budget = self.budget_router.route(normalized_query, options)
 
         retrieval_started = perf_counter()
@@ -42,14 +45,14 @@ class SchemaProjectionPipeline:
         )
         retrieval_ms = (perf_counter() - retrieval_started) * 1000
 
-        linked_models, linked_fields, _confidence = self.linker.link(candidates)
+        linked_models, linked_fields, _confidence = self.linker.link(candidates, understanding)
         if not linked_models and self.schema.models:
             linked_models = {next(iter(self.schema.models))}
-        anchor_model = self._anchor_model(candidates, linked_models)
+        anchor_model = understanding.anchor_model or self._anchor_model(candidates, linked_models)
 
         graph_started = perf_counter()
         connected_models, relation_fields, paths = self._connect_from_anchor(anchor_model, linked_models, budget.max_depth)
-        selected_model_set = (linked_models | connected_models) & set(self.schema.models)
+        selected_model_set = self._filter_allowed_models(linked_models, connected_models, paths) & set(self.schema.models)
         selected_models = self._ordered_models(anchor_model, selected_model_set, candidates)
         graph_ms = (perf_counter() - graph_started) * 1000
 
@@ -85,9 +88,12 @@ class SchemaProjectionPipeline:
         debug = None
         if options.debug:
             debug = ProjectionDebug(
+                query_understanding=understanding,
                 retrieval=candidates,
                 paths=paths,
+                relationship_paths=self._relationship_paths(paths),
                 removed_fields=removed_fields,
+                confidence=self._confidence(candidates, linked_fields, paths),
                 metrics=metrics,
             )
 
@@ -125,8 +131,42 @@ class SchemaProjectionPipeline:
             for model, fields in self.traverser.relation_fields_for_path(path).items():
                 relation_fields.setdefault(model, set()).update(fields)
 
+        paths.sort(key=lambda path: (len(path), path[-1] if path else ""))
         return selected, relation_fields, paths
 
+    def _filter_allowed_models(
+        self,
+        linked_models: set[str],
+        connected_models: set[str],
+        paths: list[list[str]],
+    ) -> set[str]:
+        allowed = set(linked_models)
+        for path in paths:
+            allowed.update(path)
+        return allowed | (connected_models & allowed)
+
+    def _relationship_paths(self, paths: list[list[str]]) -> list[RelationshipPath]:
+        relationship_paths: list[RelationshipPath] = []
+        for path in paths:
+            relation_fields: dict[str, str] = {}
+            for model, fields in self.traverser.relation_fields_for_path(path).items():
+                if fields:
+                    relation_fields[model] = sorted(fields)[0]
+            relationship_paths.append(RelationshipPath(models=path, relation_fields=relation_fields))
+        return relationship_paths
+
+    def _confidence(self, candidates: list, linked_fields: dict[str, set[str]], paths: list[list[str]]) -> ConfidenceScores:
+        retrieval_score = max((candidate.score for candidate in candidates), default=0.0)
+        requested_field_count = sum(len(fields) for fields in linked_fields.values())
+        linking_score = 1.0 if requested_field_count else 0.0
+        graph_score = 1.0 if paths or len(linked_fields) <= 1 else 0.5
+        final_score = (min(float(retrieval_score), 1.0) + linking_score + graph_score) / 3
+        return ConfidenceScores(
+            retrieval_score=round(float(retrieval_score), 4),
+            linking_score=round(linking_score, 4),
+            graph_score=round(graph_score, 4),
+            final_score=round(final_score, 4),
+        )
     def _ordered_models(self, anchor_model: str | None, selected_models: set[str], candidates: list) -> list[str]:
         ordered: list[str] = []
         if anchor_model in selected_models:
@@ -161,5 +201,3 @@ class SchemaProjectionPipeline:
                 safe[model_name].add(field_name)
 
         return safe, hallucinated_models, hallucinated_fields
-
-

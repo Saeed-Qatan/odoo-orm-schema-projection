@@ -21,7 +21,7 @@
           "column": "id",
           "relation": null,
           "inverse": null,
-          "required": false,
+          "required": true,
           "readonly": false,
           "store": true,
           "inferred": false,
@@ -146,7 +146,7 @@
           "column": "id",
           "relation": null,
           "inverse": null,
-          "required": false,
+          "required": true,
           "readonly": false,
           "store": true,
           "inferred": false,
@@ -217,6 +217,7 @@
         "sales",
         "sale",
         "مبيعات",
+        "بيع",
         "طلب بيع",
         "أمر بيع"
       ],
@@ -227,7 +228,7 @@
           "column": "id",
           "relation": null,
           "inverse": null,
-          "required": false,
+          "required": true,
           "readonly": false,
           "store": true,
           "inferred": false,
@@ -345,7 +346,9 @@
             "total",
             "amount",
             "إجمالي",
-            "مبلغ"
+            "اجمالي",
+            "مبلغ",
+            "قيمة"
           ]
         },
         "state": {
@@ -360,7 +363,11 @@
           "inferred": false,
           "description": "Field state from column state.",
           "keywords": [
-            "state"
+            "state",
+            "state",
+            "status",
+            "حالة",
+            "الحالة"
           ]
         },
         "sale_order_line_ids": {
@@ -392,7 +399,8 @@
         "sales line",
         "order line",
         "سطر البيع",
-        "بنود البيع"
+        "بنود البيع",
+        "سطور البيع"
       ],
       "fields": {
         "id": {
@@ -401,7 +409,7 @@
           "column": "id",
           "relation": null,
           "inverse": null,
-          "required": false,
+          "required": true,
           "readonly": false,
           "store": true,
           "inferred": false,

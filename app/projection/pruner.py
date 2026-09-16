@@ -30,8 +30,6 @@ class SchemaPruner:
                     requested.add("id")
 
             clean_fields = [field for field in requested if field in model.fields]
-            if "id" in model.fields and "id" not in clean_fields:
-                clean_fields.insert(0, "id")
 
             clean_fields = clean_fields[: budget.max_fields_per_model]
             allowed_count = max(0, budget.max_total_fields - total)
@@ -47,3 +45,4 @@ class SchemaPruner:
                 break
 
         return pruned, removed
+

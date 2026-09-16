@@ -63,6 +63,27 @@ class RetrievalCandidate(BaseModel):
     text: str = ""
 
 
+class QueryUnderstanding(BaseModel):
+    intent: str | None = None
+    entities: list[str] = Field(default_factory=list)
+    filters: dict[str, str] = Field(default_factory=dict)
+    required_models: list[str] = Field(default_factory=list)
+    required_fields: dict[str, list[str]] = Field(default_factory=dict)
+    anchor_model: str | None = None
+
+
+class ConfidenceScores(BaseModel):
+    retrieval_score: float = 0
+    linking_score: float = 0
+    graph_score: float = 0
+    final_score: float = 0
+
+
+class RelationshipPath(BaseModel):
+    models: list[str]
+    relation_fields: dict[str, str] = Field(default_factory=dict)
+
+
 class ProjectionOptions(BaseModel):
     max_models: int | None = None
     max_depth: int | None = None
@@ -90,9 +111,12 @@ class ProjectionMetrics(BaseModel):
 
 
 class ProjectionDebug(BaseModel):
+    query_understanding: QueryUnderstanding | None = None
     retrieval: list[RetrievalCandidate] = Field(default_factory=list)
     paths: list[list[str]] = Field(default_factory=list)
+    relationship_paths: list[RelationshipPath] = Field(default_factory=list)
     removed_fields: list[str] = Field(default_factory=list)
+    confidence: ConfidenceScores | None = None
     metrics: ProjectionMetrics
 
 

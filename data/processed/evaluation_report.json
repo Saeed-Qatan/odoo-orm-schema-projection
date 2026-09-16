@@ -1,0 +1,460 @@
+{
+  "summary": {
+    "count": 20,
+    "model_precision_avg": 1.0,
+    "model_recall_avg": 1.0,
+    "field_precision_avg": 1.0,
+    "field_recall_avg": 1.0,
+    "relationship_validity_avg": 1.0,
+    "reduction_ratio_avg": 0.8729199999999999,
+    "latency_p50_ms": 0.485,
+    "latency_p95_ms": 0.967,
+    "hallucination_count": 0,
+    "over_selection_count": 0,
+    "failed_path_count": 0
+  },
+  "cases": [
+    {
+      "query": "أعطني مبيعات أحمد في أغسطس مع اسم العميل والمنتج والكمية",
+      "models": [
+        "sale.order",
+        "sale.order.line",
+        "res.partner",
+        "product.product"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.6667,
+        "latency_ms": 1.39,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني مبيعات أغسطس مع اسم العميل",
+      "models": [
+        "sale.order",
+        "res.partner"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.875,
+        "latency_ms": 0.563,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني المبيعات مع اسم المنتج والكمية",
+      "models": [
+        "sale.order",
+        "sale.order.line",
+        "product.product"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.8333,
+        "latency_ms": 0.588,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "اعرض اسم العميل وإجمالي أمر البيع",
+      "models": [
+        "sale.order",
+        "res.partner"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.875,
+        "latency_ms": 0.572,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني مبيعات أحمد فقط",
+      "models": [
+        "sale.order"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.9583,
+        "latency_ms": 0.397,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "ما حالة مبيعات أحمد",
+      "models": [
+        "sale.order"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.9167,
+        "latency_ms": 0.386,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني إجمالي المبيعات في أغسطس",
+      "models": [
+        "sale.order"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.9167,
+        "latency_ms": 0.418,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني اسم المنتج في المبيعات",
+      "models": [
+        "sale.order",
+        "product.product",
+        "sale.order.line"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.875,
+        "latency_ms": 0.503,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني كمية المنتجات في المبيعات",
+      "models": [
+        "sale.order",
+        "sale.order.line"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.9167,
+        "latency_ms": 0.461,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "اعرض حالة الطلب وإجمالي المبيعات",
+      "models": [
+        "sale.order"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.9167,
+        "latency_ms": 0.465,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "sales with customer name",
+      "models": [
+        "sale.order",
+        "res.partner"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.9167,
+        "latency_ms": 0.775,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "sales product quantity",
+      "models": [
+        "sale.order",
+        "sale.order.line",
+        "product.product"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.8333,
+        "latency_ms": 0.482,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "sales amount by customer",
+      "models": [
+        "sale.order",
+        "res.partner"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.875,
+        "latency_ms": 0.412,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني مبيعات شهر سبتمبر",
+      "models": [
+        "sale.order"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.9583,
+        "latency_ms": 0.416,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني مبيعات العميل والكمية",
+      "models": [
+        "sale.order",
+        "sale.order.line",
+        "res.partner"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.8333,
+        "latency_ms": 0.488,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني مبيعات المنتج في أغسطس",
+      "models": [
+        "sale.order",
+        "product.product",
+        "sale.order.line"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.8333,
+        "latency_ms": 0.475,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني حالة مبيعات أغسطس",
+      "models": [
+        "sale.order"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.9167,
+        "latency_ms": 0.38,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "اعرض مبيعات العميل وحالة الطلب",
+      "models": [
+        "sale.order",
+        "res.partner"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.875,
+        "latency_ms": 0.967,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني إجمالي مبيعات أحمد في أغسطس",
+      "models": [
+        "sale.order"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.875,
+        "latency_ms": 0.65,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    },
+    {
+      "query": "أعطني اسم العميل واسم المنتج في المبيعات",
+      "models": [
+        "sale.order",
+        "res.partner",
+        "product.product",
+        "sale.order.line"
+      ],
+      "metrics": {
+        "model_precision": 1.0,
+        "model_recall": 1.0,
+        "field_precision": 1.0,
+        "field_recall": 1.0,
+        "relationship_validity": 1.0,
+        "reduction_ratio": 0.7917,
+        "latency_ms": 0.658,
+        "hallucinated_models": 0,
+        "hallucinated_fields": 0,
+        "hallucination_count": 0,
+        "over_selection_count": 0,
+        "over_selection_ok": true,
+        "missing_paths": []
+      }
+    }
+  ]
+}

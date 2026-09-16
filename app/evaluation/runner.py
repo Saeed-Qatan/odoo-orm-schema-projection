@@ -1,0 +1,52 @@
+import json
+from pathlib import Path
+
+from app.core.config import Settings
+from app.evaluation.golden_set import GOLDEN_SET
+from app.evaluation.metrics import evaluate_projection, summarize
+from app.projection.pipeline import SchemaProjectionPipeline
+from app.schema.models import ProjectionOptions
+from app.schema.repository import SchemaRepository
+
+
+DEFAULT_REPORT_PATH = Path("data/processed/evaluation_report.json")
+
+
+def build_default_pipeline(settings: Settings | None = None) -> SchemaProjectionPipeline:
+    settings = settings or Settings(enable_dense_retrieval=False)
+    repository = SchemaRepository(settings.schema_sql_path, settings.orm_schema_path)
+    schema = repository.load_or_build_orm_schema()
+    return SchemaProjectionPipeline(schema, settings)
+
+
+def run_evaluation(
+    pipeline: SchemaProjectionPipeline | None = None,
+    golden_set: list[dict] | None = None,
+    output_path: Path | None = DEFAULT_REPORT_PATH,
+) -> dict:
+    pipeline = pipeline or build_default_pipeline()
+    golden_set = golden_set or GOLDEN_SET
+    cases: list[dict] = []
+
+    for item in golden_set:
+        result = pipeline.run(item["query"], ProjectionOptions(debug=True))
+        metrics = evaluate_projection(
+            result,
+            expected_models=item["expected_models"],
+            expected_fields=item["expected_fields"],
+            expected_paths=item.get("expected_paths"),
+            max_extra_fields=item.get("max_extra_fields"),
+            schema=pipeline.schema,
+        )
+        cases.append({"query": item["query"], "models": result.models, "metrics": metrics})
+
+    report = {"summary": summarize([case["metrics"] for case in cases]), "cases": cases}
+    if output_path is not None:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    return report
+
+
+if __name__ == "__main__":
+    report = run_evaluation()
+    print(json.dumps(report["summary"], ensure_ascii=False, indent=2))

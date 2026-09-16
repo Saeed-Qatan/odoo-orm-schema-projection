@@ -3,6 +3,7 @@ from pathlib import Path
 
 from app.schema.adapters.postgres_sql_adapter import PostgresSqlSchemaAdapter
 from app.schema.models import OrmSchema, RawDatabaseSchema
+from app.schema.aliases import DEFAULT_ALIAS_PATH
 from app.schema.orm_mapper import OrmMapper
 
 
@@ -34,6 +35,7 @@ class SchemaRepository:
         if not self.orm_schema_path.exists():
             return False
         cache_mtime = self.orm_schema_path.stat().st_mtime
-        source_paths = [self.sql_path, Path(__file__).with_name("orm_mapper.py")]
+        source_paths = [self.sql_path, Path(__file__).with_name("orm_mapper.py"), DEFAULT_ALIAS_PATH]
         return all(cache_mtime >= source.stat().st_mtime for source in source_paths if source.exists())
+
 
