@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from app.core.config import Settings
+from app.projection.budget import BudgetRouter
 from app.projection.pipeline import SchemaProjectionPipeline
 from app.schema.adapters.postgres_sql_adapter import PostgresSqlSchemaAdapter
 from app.schema.models import ProjectionOptions
@@ -54,3 +55,21 @@ def test_projection_returns_query_guided_minimal_schema_without_hallucination() 
 
     assert "res.country" not in result.models
     assert "res.company" not in result.models
+
+
+def test_budget_router_clamps_user_supplied_limits() -> None:
+    budget = BudgetRouter(Settings()).route(
+        "أعطني مبيعات أحمد في أغسطس مع اسم العميل والمنتج والكمية",
+        ProjectionOptions(
+            max_models=100,
+            max_depth=100,
+            max_fields_per_model=100,
+            max_total_fields=100,
+            top_k_final=100,
+        ),
+    )
+
+    assert budget.max_models == 8
+    assert budget.max_depth == 4
+    assert budget.max_fields_per_model == 12
+    assert budget.max_total_fields == 50

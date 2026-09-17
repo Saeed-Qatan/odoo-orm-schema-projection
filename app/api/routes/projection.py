@@ -23,10 +23,11 @@ def create_projection_router(pipeline: SchemaProjectionPipeline, limiter: InMemo
                 asyncio.to_thread(pipeline.run, payload.query, payload.options),
                 timeout=settings.request_timeout_ms / 1000,
             )
-        except TimeoutError:
+        except (TimeoutError, asyncio.TimeoutError):
             raise HTTPException(
                 status_code=status.HTTP_504_GATEWAY_TIMEOUT,
                 detail="Schema projection exceeded the request timeout.",
             ) from None
 
     return router
+
