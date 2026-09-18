@@ -14,6 +14,9 @@
         "زبون",
         "جهة اتصال"
       ],
+      "category": null,
+      "common_domains": [],
+      "field_groups": {},
       "fields": {
         "id": {
           "name": "id",
@@ -28,7 +31,9 @@
           "description": "Field id from column id.",
           "keywords": [
             "id"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "name": {
           "name": "name",
@@ -46,7 +51,9 @@
             "name",
             "اسم",
             "الاسم"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "email": {
           "name": "email",
@@ -61,7 +68,9 @@
           "description": "Field email from column email.",
           "keywords": [
             "email"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "phone": {
           "name": "phone",
@@ -76,7 +85,9 @@
           "description": "Field phone from column phone.",
           "keywords": [
             "phone"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "customer_rank": {
           "name": "customer_rank",
@@ -91,7 +102,9 @@
           "description": "Field customer_rank from column customer_rank.",
           "keywords": [
             "customer_rank"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "supplier_rank": {
           "name": "supplier_rank",
@@ -106,7 +119,9 @@
           "description": "Field supplier_rank from column supplier_rank.",
           "keywords": [
             "supplier_rank"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "sale_order_ids": {
           "name": "sale_order_ids",
@@ -123,7 +138,9 @@
             "sale_order_ids",
             "sale.order",
             "partner_id"
-          ]
+          ],
+          "choices": [],
+          "group": null
         }
       }
     },
@@ -139,6 +156,9 @@
         "منتج",
         "صنف"
       ],
+      "category": null,
+      "common_domains": [],
+      "field_groups": {},
       "fields": {
         "id": {
           "name": "id",
@@ -153,7 +173,9 @@
           "description": "Field id from column id.",
           "keywords": [
             "id"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "name": {
           "name": "name",
@@ -171,7 +193,9 @@
             "name",
             "اسم",
             "الاسم"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "default_code": {
           "name": "default_code",
@@ -186,7 +210,9 @@
           "description": "Field default_code from column default_code.",
           "keywords": [
             "default_code"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "sale_order_line_ids": {
           "name": "sale_order_line_ids",
@@ -203,7 +229,9 @@
             "sale_order_line_ids",
             "sale.order.line",
             "product_id"
-          ]
+          ],
+          "choices": [],
+          "group": null
         }
       }
     },
@@ -221,6 +249,9 @@
         "طلب بيع",
         "أمر بيع"
       ],
+      "category": null,
+      "common_domains": [],
+      "field_groups": {},
       "fields": {
         "id": {
           "name": "id",
@@ -235,7 +266,9 @@
           "description": "Field id from column id.",
           "keywords": [
             "id"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "name": {
           "name": "name",
@@ -253,7 +286,9 @@
             "name",
             "اسم",
             "الاسم"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "date_order": {
           "name": "date_order",
@@ -287,7 +322,9 @@
             "اكتوبر",
             "نوفمبر",
             "ديسمبر"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "partner_id": {
           "name": "partner_id",
@@ -307,7 +344,9 @@
             "partner",
             "عميل",
             "زبون"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "user_id": {
           "name": "user_id",
@@ -328,7 +367,9 @@
             "البائع",
             "أحمد",
             "احمد"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "amount_total": {
           "name": "amount_total",
@@ -349,7 +390,9 @@
             "اجمالي",
             "مبلغ",
             "قيمة"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "state": {
           "name": "state",
@@ -368,7 +411,9 @@
             "status",
             "حالة",
             "الحالة"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "sale_order_line_ids": {
           "name": "sale_order_line_ids",
@@ -385,7 +430,9 @@
             "sale_order_line_ids",
             "sale.order.line",
             "order_id"
-          ]
+          ],
+          "choices": [],
+          "group": null
         }
       }
     },
@@ -402,6 +449,9 @@
         "بنود البيع",
         "سطور البيع"
       ],
+      "category": null,
+      "common_domains": [],
+      "field_groups": {},
       "fields": {
         "id": {
           "name": "id",
@@ -416,7 +466,9 @@
           "description": "Field id from column id.",
           "keywords": [
             "id"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "order_id": {
           "name": "order_id",
@@ -431,7 +483,9 @@
           "description": "Many2one relation to sale.order.",
           "keywords": [
             "order_id"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "product_id": {
           "name": "product_id",
@@ -450,7 +504,9 @@
             "item",
             "منتج",
             "صنف"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "product_uom_qty": {
           "name": "product_uom_qty",
@@ -469,7 +525,9 @@
             "qty",
             "كمية",
             "الكمية"
-          ]
+          ],
+          "choices": [],
+          "group": null
         },
         "price_unit": {
           "name": "price_unit",
@@ -484,7 +542,9 @@
           "description": "Field price_unit from column price_unit.",
           "keywords": [
             "price_unit"
-          ]
+          ],
+          "choices": [],
+          "group": null
         }
       }
     }

@@ -2,7 +2,7 @@
 
 ## Current Progress Snapshot
 
-This repository is on branch `v2`.
+This repository is on branch `v3`.
 
 The backend prototype is stable enough for focused and opt-in expanded schema testing. The current source of truth for the project plan is this file:
 
@@ -268,7 +268,7 @@ The repository does not currently document the names or exact findings from the 
 
 ## Current Phase
 
-The current phase is V2 expansion hardening.
+The current phase is V3 structured metadata-source support.
 
 The project can now test broader schema relationships through the opt-in expanded runtime, but it should not claim full Odoo fidelity yet because the sales/product additions in `schema.expanded.sql` are synthetic.
 
@@ -380,3 +380,32 @@ Tests:
 - `data/raw/odoo/schema.expanded.sql` is opt-in and synthetic.
 - `.agents/PLAN.md` is the only accepted plan source.
 - Details of the five reviewed repositories are not documented in this repo, so this plan records general lessons only.
+
+## V3 - Structured ORM Metadata JSON Source
+
+### Goal
+
+Add a second source shape for future authentic Odoo metadata without replacing the current SQL-based runtime. The new source is a structured JSON file that can describe Odoo ORM models more richly than raw PostgreSQL DDL.
+
+### Done In V3
+
+- [x] Create branch `v3` from stable `v2`.
+- [x] Add `data/raw/odoo/orm_metadata.sample.json` as a structured sample metadata source.
+- [x] Add `OrmMetadataJsonAdapter` to convert metadata JSON into the existing `OrmSchema` contract.
+- [x] Preserve metadata fields such as descriptions, category, keywords, common domains, field groups, field choices, and relations.
+- [x] Infer reverse one2many relationships so metadata JSON can use the same graph/projection pipeline.
+- [x] Extend schema authenticity checks to inspect SQL and metadata JSON sources.
+- [x] Add metadata golden evaluation support through `app.evaluation.runner --metadata-json`.
+- [x] Keep existing public endpoints unchanged.
+
+### Still Not Done
+
+- [ ] Obtain or generate an authentic Odoo metadata export from a real Odoo environment.
+- [ ] Validate the authentic metadata export with `app.schema.authenticity`.
+- [ ] Compare authentic metadata performance against focused and expanded fixtures.
+- [ ] Decide whether metadata JSON should become a runtime option or default source.
+- [ ] Add `POST /api/v1/schema/inspect-source` only if readiness inspection is needed from API clients.
+
+## No Direct Odoo Connection
+
+The current product is a backend schema projection prototype. It has no live Odoo connection. All current behavior is driven by local SQL fixtures, local JSON metadata samples, local alias configuration, and generated local reports.

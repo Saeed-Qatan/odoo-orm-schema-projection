@@ -205,3 +205,37 @@ accounting models are reported separately as scale-readiness requirements.
 Dense retrieval remains disabled by default. It should only be evaluated after an
 authentic larger Odoo schema exists and only adopted if it improves recall without
 increasing hallucination or unacceptable latency.
+
+## Structured ORM Metadata JSON (V3)
+
+V3 adds an optional structured metadata source at:
+
+```text
+data/raw/odoo/orm_metadata.sample.json
+```
+
+This source is not the default runtime and is not an authentic Odoo export. It is a development sample for validating the next ingestion shape. The metadata JSON can describe models with `description`, `category`, `keywords`, `common_domains`, `field_groups`, field `choices`, and relationship metadata.
+
+Run metadata evaluation:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.evaluation.runner --metadata-json
+```
+
+Inspect metadata readiness:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.schema.authenticity data/raw/odoo/orm_metadata.sample.json
+```
+
+The readiness checker supports both SQL and JSON sources. A sample or synthetic source must not be treated as an authentic Odoo schema candidate.
+
+## No Direct Odoo Connection
+
+This project does not connect to a live Odoo server or operational Odoo database. Current sources are local files only:
+
+- SQL fixtures under `data/raw/odoo/*.sql`.
+- Structured metadata sample under `data/raw/odoo/orm_metadata.sample.json`.
+- Alias configuration under `data/config/schema_aliases.json`.
+
+The backend projects schema metadata only. It does not execute Odoo RPC calls, does not run user SQL, does not read business records, and does not generate Odoo domains yet.

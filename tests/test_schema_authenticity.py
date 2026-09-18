@@ -18,3 +18,12 @@ def test_focused_schema_is_not_ready_for_authentic_scale_adoption() -> None:
     assert report["is_authentic_candidate"] is False
     assert "res.users" in report["missing_core_models"]
     assert "account.move" in report["missing_scale_models"]
+
+def test_metadata_sample_is_not_marked_as_authentic_candidate() -> None:
+    report = evaluate_schema_source(Path("data/raw/odoo/orm_metadata.sample.json"))
+
+    assert report["source_kind"] == "orm_metadata_json"
+    assert report["module_count"] >= 10
+    assert report["sample_marker_found"] is True
+    assert report["is_authentic_candidate"] is False
+    assert "account.move" in report["missing_scale_models"]

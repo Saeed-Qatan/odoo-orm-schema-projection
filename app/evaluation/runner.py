@@ -6,17 +6,26 @@ from app.core.config import Settings
 from app.evaluation.golden_set import GOLDEN_SET
 from app.evaluation.metrics import evaluate_projection, summarize
 from app.projection.pipeline import SchemaProjectionPipeline
+from app.schema.adapters.orm_metadata_json_adapter import OrmMetadataJsonAdapter
 from app.schema.models import ProjectionOptions
 from app.schema.repository import SchemaRepository
 
 
 DEFAULT_REPORT_PATH = Path("data/processed/evaluation_report.json")
+METADATA_SAMPLE_PATH = Path("data/raw/odoo/orm_metadata.sample.json")
+METADATA_REPORT_PATH = Path("data/processed/evaluation_report.metadata.json")
 
 
 def build_default_pipeline(settings: Settings | None = None) -> SchemaProjectionPipeline:
     settings = settings or Settings(enable_dense_retrieval=False)
     repository = SchemaRepository(settings.schema_sql_path, settings.orm_schema_path)
     schema = repository.load_or_build_orm_schema()
+    return SchemaProjectionPipeline(schema, settings)
+
+
+def build_metadata_pipeline(path: Path = METADATA_SAMPLE_PATH, settings: Settings | None = None) -> SchemaProjectionPipeline:
+    settings = settings or Settings(enable_dense_retrieval=False)
+    schema = OrmMetadataJsonAdapter().load(path)
     return SchemaProjectionPipeline(schema, settings)
 
 
@@ -52,6 +61,7 @@ def run_evaluation(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Evaluate schema projection fixtures")
     parser.add_argument("--expanded", action="store_true", help="Evaluate the synthetic expanded fixture")
+    parser.add_argument("--metadata-json", type=Path, nargs="?", const=METADATA_SAMPLE_PATH, help="Evaluate a structured ORM metadata JSON source")
     args = parser.parse_args()
     if args.expanded:
         from app.evaluation.expanded_golden_set import EXPANDED_GOLDEN_SET
@@ -66,6 +76,11 @@ if __name__ == "__main__":
         report = run_evaluation(
             pipeline, EXPANDED_GOLDEN_SET, Path("data/processed/evaluation_report.expanded.json")
         )
+    elif args.metadata_json:
+        from app.evaluation.metadata_golden_set import METADATA_GOLDEN_SET
+
+        pipeline = build_metadata_pipeline(args.metadata_json)
+        report = run_evaluation(pipeline, METADATA_GOLDEN_SET, METADATA_REPORT_PATH)
     else:
         report = run_evaluation()
     print(json.dumps(report["summary"], ensure_ascii=False, indent=2))

@@ -1,0 +1,167 @@
+{
+  "source": {
+    "kind": "sample",
+    "authentic": false,
+    "description": "Structured ORM metadata sample for development. Not an authentic Odoo export."
+  },
+  "modules": [
+    {
+      "name": "sale.order",
+      "table": "sale_order",
+      "description": "Sales order document used to track customer sales.",
+      "category": "Sales",
+      "keywords": ["sales", "sale order", "مبيعات", "أمر بيع"],
+      "common_domains": [
+        {"name": "confirmed", "domain": [["state", "in", ["sale", "done"]]]},
+        {"name": "draft", "domain": [["state", "=", "draft"]]}
+      ],
+      "field_groups": {
+        "identity": {
+          "description": "Order identity fields.",
+          "fields": [
+            {"name": "name", "type": "char", "required": true, "description": "Sales order number.", "keywords": ["order", "number", "رقم"]}
+          ]
+        },
+        "commercial": {
+          "description": "Commercial and customer fields.",
+          "fields": [
+            {"name": "partner_id", "type": "many2one", "relation": "res.partner", "required": true, "description": "Customer on the sales order.", "keywords": ["customer", "client", "عميل"]},
+            {"name": "user_id", "type": "many2one", "relation": "res.users", "description": "Salesperson responsible for the order.", "keywords": ["salesperson", "مندوب", "بائع"]},
+            {"name": "company_id", "type": "many2one", "relation": "res.company", "description": "Company or branch for the order.", "keywords": ["company", "branch", "شركة", "فرع"]},
+            {"name": "currency_id", "type": "many2one", "relation": "res.currency", "description": "Order currency.", "keywords": ["currency", "عملة"]},
+            {"name": "amount_total", "type": "float", "description": "Total sales order amount.", "keywords": ["total", "amount", "إجمالي"]},
+            {"name": "date_order", "type": "datetime", "description": "Sales order date.", "keywords": ["date", "تاريخ", "أغسطس"]},
+            {"name": "state", "type": "selection", "description": "Sales order status.", "keywords": ["status", "state", "حالة"], "choices": [["draft", "Quotation"], ["sale", "Sales Order"], ["done", "Locked"], ["cancel", "Cancelled"]]}
+          ]
+        }
+      }
+    },
+    {
+      "name": "sale.order.line",
+      "table": "sale_order_line",
+      "description": "Sales order line containing ordered products and quantities.",
+      "category": "Sales",
+      "keywords": ["order line", "sales line", "سطر بيع"],
+      "common_domains": [],
+      "field_groups": {
+        "line": {
+          "description": "Line item fields.",
+          "fields": [
+            {"name": "order_id", "type": "many2one", "relation": "sale.order", "required": true, "description": "Parent sales order.", "keywords": ["order", "طلب"]},
+            {"name": "product_id", "type": "many2one", "relation": "product.product", "description": "Ordered product variant.", "keywords": ["product", "منتج"]},
+            {"name": "product_uom_qty", "type": "float", "description": "Ordered quantity.", "keywords": ["quantity", "qty", "كمية"]}
+          ]
+        }
+      }
+    },
+    {
+      "name": "product.product",
+      "table": "product_product",
+      "description": "Product variant.",
+      "category": "Inventory",
+      "keywords": ["product", "variant", "منتج"],
+      "common_domains": [],
+      "field_groups": {
+        "product": {
+          "description": "Product fields.",
+          "fields": [
+            {"name": "name", "type": "char", "description": "Product display name.", "keywords": ["name", "اسم المنتج"]},
+            {"name": "product_tmpl_id", "type": "many2one", "relation": "product.template", "description": "Related product template.", "keywords": ["template", "قالب"]}
+          ]
+        }
+      }
+    },
+    {
+      "name": "product.template",
+      "table": "product_template",
+      "description": "Product template shared by variants.",
+      "category": "Inventory",
+      "keywords": ["product template", "template", "منتج"],
+      "common_domains": [],
+      "field_groups": {
+        "template": {
+          "description": "Template fields.",
+          "fields": [
+            {"name": "name", "type": "char", "required": true, "description": "Product template name.", "keywords": ["name", "اسم المنتج"]},
+            {"name": "categ_id", "type": "many2one", "relation": "product.category", "description": "Product category.", "keywords": ["category", "تصنيف"]}
+          ]
+        }
+      }
+    },
+    {
+      "name": "product.category",
+      "table": "product_category",
+      "description": "Product category.",
+      "category": "Inventory",
+      "keywords": ["category", "تصنيف"],
+      "common_domains": [],
+      "field_groups": {
+        "category": {"fields": [{"name": "name", "type": "char", "description": "Category name.", "keywords": ["name", "اسم"]}]}
+      }
+    },
+    {
+      "name": "res.partner",
+      "table": "res_partner",
+      "description": "Partner or customer contact.",
+      "category": "Contacts",
+      "keywords": ["partner", "customer", "client", "عميل"],
+      "common_domains": [{"name": "customers", "domain": [["customer_rank", ">", 0]]}],
+      "field_groups": {
+        "identity": {
+          "fields": [
+            {"name": "name", "type": "char", "required": true, "description": "Partner name.", "keywords": ["name", "اسم"]},
+            {"name": "country_id", "type": "many2one", "relation": "res.country", "description": "Partner country.", "keywords": ["country", "بلد"]},
+            {"name": "state_id", "type": "many2one", "relation": "res.country.state", "description": "Partner region/state.", "keywords": ["region", "state", "منطقة"]}
+          ]
+        }
+      }
+    },
+    {
+      "name": "res.users",
+      "table": "res_users",
+      "description": "System user, including salesperson users.",
+      "category": "Settings",
+      "keywords": ["user", "salesperson", "مندوب"],
+      "common_domains": [],
+      "field_groups": {
+        "identity": {"fields": [{"name": "partner_id", "type": "many2one", "relation": "res.partner", "description": "Contact record for the user.", "keywords": ["partner", "name", "اسم"]}]}
+      }
+    },
+    {
+      "name": "res.company",
+      "table": "res_company",
+      "description": "Company or operating branch.",
+      "category": "Settings",
+      "keywords": ["company", "branch", "شركة"],
+      "common_domains": [],
+      "field_groups": {"identity": {"fields": [{"name": "name", "type": "char", "required": true, "description": "Company name.", "keywords": ["name", "اسم"]}]}}
+    },
+    {
+      "name": "res.currency",
+      "table": "res_currency",
+      "description": "Currency.",
+      "category": "Accounting",
+      "keywords": ["currency", "عملة"],
+      "common_domains": [],
+      "field_groups": {"identity": {"fields": [{"name": "name", "type": "char", "required": true, "description": "Currency name.", "keywords": ["name", "اسم"]}]}}
+    },
+    {
+      "name": "res.country",
+      "table": "res_country",
+      "description": "Country.",
+      "category": "Localization",
+      "keywords": ["country", "بلد"],
+      "common_domains": [],
+      "field_groups": {"identity": {"fields": [{"name": "name", "type": "char", "required": true, "description": "Country name.", "keywords": ["name", "اسم"]}]}}
+    },
+    {
+      "name": "res.country.state",
+      "table": "res_country_state",
+      "description": "Country state or region.",
+      "category": "Localization",
+      "keywords": ["state", "region", "منطقة"],
+      "common_domains": [],
+      "field_groups": {"identity": {"fields": [{"name": "name", "type": "char", "required": true, "description": "Region name.", "keywords": ["name", "اسم"]}]}}
+    }
+  ]
+}

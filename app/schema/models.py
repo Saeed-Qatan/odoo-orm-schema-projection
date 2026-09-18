@@ -39,6 +39,8 @@ class FieldSchema(BaseModel):
     inferred: bool = False
     description: str | None = None
     keywords: list[str] = Field(default_factory=list)
+    choices: list[list[str]] = Field(default_factory=list)
+    group: str | None = None
 
 
 class ModelSchema(BaseModel):
@@ -46,6 +48,9 @@ class ModelSchema(BaseModel):
     table: str
     description: str | None = None
     keywords: list[str] = Field(default_factory=list)
+    category: str | None = None
+    common_domains: list[dict] = Field(default_factory=list)
+    field_groups: dict = Field(default_factory=dict)
     fields: dict[str, FieldSchema] = Field(default_factory=dict)
 
 

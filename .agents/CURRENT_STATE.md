@@ -2,7 +2,7 @@
 
 ## Status
 
-The project is in V2 expansion hardening.
+The project is in V3 structured metadata-source implementation.
 
 The latest completed backend task is the opt-in expanded API runtime with source-isolated schema caches. The latest documentation task synchronized the official project plan with the V2 progress that has already been committed and pushed.
 
@@ -11,7 +11,7 @@ The latest completed backend task is the opt-in expanded API runtime with source
 Current active development branch:
 
 ```text
-v2
+v3
 ```
 
 Remote branch `origin/v2` contains the expanded runtime and schema work.
@@ -132,3 +132,28 @@ Remaining work is grouped under:
 - Added `app.schema.authenticity` to evaluate whether a supplied SQL source is an authentic Odoo scale candidate.
 - Current local sources are not authentic Odoo sales exports. Authentic Odoo schema adoption remains blocked until the user provides or generates a real export.
 - Dense retrieval remains disabled by default and is not adopted until authentic large-schema evaluation justifies it. Latest full pytest: 51 passed, 2 warnings.
+
+## V3 Structured ORM Metadata JSON State
+
+- Active branch: `v3`.
+- A structured metadata sample source exists at `data/raw/odoo/orm_metadata.sample.json`.
+- `OrmMetadataJsonAdapter` converts metadata JSON modules into the existing `OrmSchema` model so the same projection pipeline can run without API changes.
+- Metadata JSON can preserve model `description`, `category`, `keywords`, `common_domains`, `field_groups`, and field-level `choices`, `relation`, `description`, and `keywords`.
+- The sample metadata source is explicitly marked as sample/non-authentic. It is useful for testing the next ingestion shape, not for claiming full Odoo fidelity.
+- The default runtime remains `data/raw/odoo/schema.sql`.
+
+
+## No Direct Odoo Connection
+
+The project currently has no direct connection to Odoo. V3 only adds support for a structured local metadata JSON source. The backend still does not call Odoo RPC, does not connect to an operational Odoo database, does not execute user SQL, and does not generate Odoo domains.
+
+## Latest V3 Verification Snapshot
+
+Executed successfully on branch `v3`:
+
+- Targeted V3 tests: 25 passed.
+- Full pytest: 57 passed, 2 warnings.
+- Default evaluation: 20 cases, precision/recall 1.0, hallucination/over-selection/failed paths 0.
+- Expanded evaluation: 16 cases, precision/recall 1.0, hallucination/over-selection/failed paths 0.
+- Metadata JSON evaluation: 3 cases, precision/recall 1.0, hallucination/over-selection/failed paths 0.
+- Metadata readiness check reports the sample as `sample_marker_found=true`, `is_authentic_candidate=false`, and `is_scale_ready=false`.
