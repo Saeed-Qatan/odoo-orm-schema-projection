@@ -6,11 +6,11 @@ from app.schema.models import RawColumn, RawDatabaseSchema, RawForeignKey, RawTa
 
 
 CREATE_TABLE_RE = re.compile(
-    r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?P<name>"?[\w.]+"?)\s*\((?P<body>.*?)\);',
+    r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?P<name>"?[\w.]+"?)\s*\((?P<body>.*?)\)\s*(?:INHERITS\s*\((?P<parents>[^)]*)\))?\s*;',
     re.IGNORECASE | re.DOTALL,
 )
 FK_RE = re.compile(
-    r'ALTER\s+TABLE\s+(?:ONLY\s+)?(?P<table>"?[\w.]+"?).*?'
+    r'ALTER\s+TABLE\s+(?:ONLY\s+)?(?P<table>"?[\w.]+"?)[^;]*?'
     r'CONSTRAINT\s+(?P<constraint>"?[\w.]+"?)\s+FOREIGN\s+KEY\s*\((?P<column>"?[\w.]+"?)\)\s+'
     r'REFERENCES\s+(?P<ref_table>"?[\w.]+"?)\s*\((?P<ref_column>"?[\w.]+"?)\)',
     re.IGNORECASE | re.DOTALL,
@@ -69,14 +69,51 @@ class PostgresSqlSchemaAdapter:
 
         schema = RawDatabaseSchema()
         statements = parse_sql(sql)
+        inheritance: dict[str, list[str]] = {}
         for raw in statements:
             stmt = raw.stmt
             stmt_type = type(stmt).__name__
             if stmt_type == "CreateStmt":
                 self._extract_create_table(stmt, schema)
+                inheritance[_clean_identifier(stmt.relation.relname)] = [
+                    _clean_identifier(parent.relname) for parent in stmt.inhRelations or []
+                ]
             elif stmt_type == "AlterTableStmt":
                 self._extract_foreign_keys(stmt, schema)
+        self._resolve_inheritance(schema, inheritance)
         return schema
+
+    def _resolve_inheritance(
+        self, schema: RawDatabaseSchema, inheritance: dict[str, list[str]]
+    ) -> None:
+        resolved: set[str] = set()
+
+        def inherit(table_name: str, visiting: set[str]) -> None:
+            if table_name in resolved:
+                return
+            if table_name in visiting:
+                raise ValueError(f"Cyclic table inheritance: {table_name}")
+            table = schema.tables[table_name]
+            for parent_name in inheritance.get(table_name, []):
+                if parent_name not in schema.tables:
+                    raise ValueError(f"Missing inheritance parent: {parent_name}")
+                inherit(parent_name, visiting | {table_name})
+                existing = {column.name: column for column in table.columns}
+                for column in schema.tables[parent_name].columns:
+                    if column.name not in existing:
+                        inherited = column.model_copy(deep=True)
+                        inherited.primary_key = False
+                        table.columns.append(inherited)
+                    elif not column.nullable:
+                        existing[column.name].nullable = False
+            for column in table.columns:
+                if column.name in table.primary_key:
+                    column.primary_key = True
+                    column.nullable = False
+            resolved.add(table_name)
+
+        for table_name in schema.tables:
+            inherit(table_name, set())
 
     def _extract_create_table(self, stmt: Any, schema: RawDatabaseSchema) -> None:
         table_name = _clean_identifier(stmt.relation.relname)
@@ -134,7 +171,15 @@ class PostgresSqlSchemaAdapter:
         table_name = _clean_identifier(stmt.relation.relname)
         for command in stmt.cmds or []:
             constraint = getattr(command, "def_", None)
-            if not constraint or _enum_name(constraint.contype) != "CONSTR_FOREIGN" or not constraint.pktable:
+            if type(constraint).__name__ != "Constraint":
+                continue
+            if _enum_name(constraint.contype) == "CONSTR_PRIMARY":
+                table = schema.tables[table_name]
+                table.primary_key = [
+                    _clean_identifier(_string_value(attr)) for attr in constraint.keys or []
+                ]
+                continue
+            if _enum_name(constraint.contype) != "CONSTR_FOREIGN" or not constraint.pktable:
                 continue
             fk_attrs = list(constraint.fk_attrs or [])
             pk_attrs = list(constraint.pk_attrs or [])
@@ -175,15 +220,20 @@ class PostgresSqlSchemaAdapter:
 
     def _load_with_regex(self, sql: str) -> RawDatabaseSchema:
         schema = RawDatabaseSchema()
+        inheritance: dict[str, list[str]] = {}
 
         for match in CREATE_TABLE_RE.finditer(sql):
             table_name = _clean_identifier(match.group("name"))
             table = RawTable(name=table_name)
+            inheritance[table_name] = [
+                _clean_identifier(parent) for parent in (match.group("parents") or "").split(",")
+                if parent.strip()
+            ]
             table_foreign_keys: list[RawForeignKey] = []
 
             for item in _split_sql_items(match.group("body")):
                 upper_item = item.upper()
-                if upper_item.startswith(("CONSTRAINT", "PRIMARY KEY", "FOREIGN KEY", "UNIQUE", "CHECK")):
+                if re.match(r"^(?:CONSTRAINT\b|PRIMARY\s+KEY\b|FOREIGN\s+KEY\b|UNIQUE\b|CHECK\b)", upper_item):
                     pk = PK_RE.search(item)
                     if pk:
                         table.primary_key = [_clean_identifier(col) for col in pk.group("columns").split(",")]
@@ -214,6 +264,20 @@ class PostgresSqlSchemaAdapter:
                         primary_key="PRIMARY KEY" in upper_item,
                     )
                 )
+                reference = re.search(
+                    r'\bREFERENCES\s+(?P<table>"?[\w.]+"?)\s*\((?P<column>"?[\w.]+"?)\)',
+                    item,
+                    re.IGNORECASE,
+                )
+                if reference:
+                    table_foreign_keys.append(
+                        RawForeignKey(
+                            table=table_name,
+                            column=column_name,
+                            ref_table=_clean_identifier(reference.group("table")),
+                            ref_column=_clean_identifier(reference.group("column")),
+                        )
+                    )
                 if "PRIMARY KEY" in upper_item and column_name not in table.primary_key:
                     table.primary_key.append(column_name)
 
@@ -231,4 +295,17 @@ class PostgresSqlSchemaAdapter:
                 )
             )
 
+        alter_primary_keys = re.compile(
+            r'ALTER\s+TABLE\s+(?:ONLY\s+)?(?P<table>"?[\w.]+"?)[^;]*?'
+            r'PRIMARY\s+KEY\s*\((?P<columns>[^)]*)\)',
+            re.IGNORECASE | re.DOTALL,
+        )
+        for match in alter_primary_keys.finditer(sql):
+            table_name = _clean_identifier(match.group("table"))
+            if table_name not in schema.tables:
+                raise ValueError(f"Missing primary-key table: {table_name}")
+            schema.tables[table_name].primary_key = [
+                _clean_identifier(column) for column in match.group("columns").split(",")
+            ]
+        self._resolve_inheritance(schema, inheritance)
         return schema

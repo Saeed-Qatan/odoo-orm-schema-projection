@@ -105,3 +105,40 @@ class _SlowPipeline:
     def run(self, query, options) -> ProjectionResponse:
         time.sleep(0.2)
         return ProjectionResponse(query=query, models=[], schema={})
+
+
+def test_expanded_application_api_uses_isolated_artifacts(tmp_path) -> None:
+    from pathlib import Path
+    from app.application import create_app
+
+    settings = Settings(
+        _env_file=None,
+        schema_sql_path=Path('data/raw/odoo/schema.expanded.sql'),
+        orm_schema_path=tmp_path / 'expanded_orm.json',
+        graph_path=tmp_path / 'expanded_graph.json',
+        index_dir=tmp_path / 'indexes',
+        enable_dense_retrieval=False,
+    )
+    with TestClient(create_app(settings)) as client:
+        assert client.get('/health').status_code == 200
+        models = client.get('/api/v1/schema/models').json()['models']
+        assert len(models) == 173
+        assert 'product.template' in models
+        assert client.get('/api/v1/schema/models/product.template').status_code == 200
+        assert client.get('/api/v1/schema/models/nonexistent').status_code == 404
+        response = client.post('/api/v1/project-schema', json={
+            'query': 'أعطني المبيعات مع اسم العميل وبلد العميل واسم المندوب',
+            'options': {'debug': True},
+        })
+        assert response.status_code == 200
+        fields = response.json()['schema']['sale.order']['fields']
+        assert set(fields['partner_id']['fields']) == {'name', 'country_id'}
+        assert set(fields['user_id']['fields']['partner_id']['fields']) == {'name'}
+        response = client.post('/api/v1/project-schema', json={
+            'query': 'sales product quantity', 'options': {'debug': True},
+        })
+        assert response.status_code == 200
+        fields = response.json()['schema']['sale.order']['fields']
+        assert 'name' in fields['sale_order_line_ids']['fields']['product_id']['fields']['product_tmpl_id']['fields']
+    assert settings.orm_schema_path.exists()
+    assert settings.graph_path.exists()

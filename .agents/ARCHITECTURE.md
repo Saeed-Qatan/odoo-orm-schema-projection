@@ -239,3 +239,25 @@ responsibilities, or public contracts must be documented in:
 .agents/CURRENT_STATE.md
 ```
 
+
+## Explicit Query Relationship Paths
+
+Sales aliases may define field_paths: the root model followed by exact field names.
+Understanding validates every hop against the active schema. The pipeline enforces
+relation depth and the projector scopes children to each relationship occurrence,
+preventing shared model fields from leaking between customer and salesperson roles.
+Incomplete paths are removed after budget pruning. Queries without explicit paths
+retain legacy graph traversal. Default schema/cache changes are separate work.
+
+## Application Construction And Source-Isolated Caches
+
+app.application.create_app(settings) builds each application using one explicit
+Settings instance for its pipeline and routers. app.main retains the default
+runtime; app.expanded provides an opt-in synthetic expanded runtime with separate
+ORM/graph/index paths. This factory exists to make source-isolated API integration
+tests and parallel local runtime instances possible.
+
+SchemaRepository keeps ORM payload shape unchanged and records source/content
+and artifact hashes in a local metadata sidecar. Old or mismatched caches are
+rebuilt; sidecars are not committed. Graph snapshots are regenerated from the
+active schema during application construction. Graph save failures are logged.

@@ -1,3 +1,4 @@
+import argparse
 import json
 from pathlib import Path
 
@@ -29,7 +30,8 @@ def run_evaluation(
     cases: list[dict] = []
 
     for item in golden_set:
-        result = pipeline.run(item["query"], ProjectionOptions(debug=True))
+        options = ProjectionOptions.model_validate({**item.get("options", {}), "debug": True})
+        result = pipeline.run(item["query"], options)
         metrics = evaluate_projection(
             result,
             expected_models=item["expected_models"],
@@ -48,5 +50,22 @@ def run_evaluation(
 
 
 if __name__ == "__main__":
-    report = run_evaluation()
+    parser = argparse.ArgumentParser(description="Evaluate schema projection fixtures")
+    parser.add_argument("--expanded", action="store_true", help="Evaluate the synthetic expanded fixture")
+    args = parser.parse_args()
+    if args.expanded:
+        from app.evaluation.expanded_golden_set import EXPANDED_GOLDEN_SET
+
+        settings = Settings(
+            schema_sql_path=Path("data/raw/odoo/schema.expanded.sql"),
+            orm_schema_path=Path("data/processed/odoo_orm_schema.expanded.json"),
+            enable_dense_retrieval=False,
+        )
+        repository = SchemaRepository(settings.schema_sql_path, settings.orm_schema_path)
+        pipeline = SchemaProjectionPipeline(repository.build_orm_schema(), settings)
+        report = run_evaluation(
+            pipeline, EXPANDED_GOLDEN_SET, Path("data/processed/evaluation_report.expanded.json")
+        )
+    else:
+        report = run_evaluation()
     print(json.dumps(report["summary"], ensure_ascii=False, indent=2))

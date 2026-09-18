@@ -7,7 +7,10 @@ class SchemaProjector:
         schema: OrmSchema,
         selected_fields: dict[str, set[str]],
         preferred_roots: list[str] | None = None,
+        field_paths: list[list[str]] | None = None,
     ) -> dict:
+        if field_paths is not None:
+            return self._project_field_paths(schema, selected_fields, field_paths, preferred_roots or [])
         roots = self._find_roots(schema, selected_fields, preferred_roots or [])
         if not roots and selected_fields:
             roots = [next(iter(selected_fields))]
@@ -17,6 +20,37 @@ class SchemaProjector:
             projected[root] = {"fields": self._project_model(schema, root, selected_fields, visited)}
         return projected
 
+    def _project_field_paths(
+        self,
+        schema: OrmSchema,
+        selected_fields: dict[str, set[str]],
+        field_paths: list[list[str]],
+        preferred_roots: list[str],
+    ) -> dict:
+        projected: dict = {}
+        for path in field_paths:
+            current = path[0]
+            resolved = []
+            for index, name in enumerate(path[1:]):
+                if name not in selected_fields.get(current, set()):
+                    break
+                field = schema.models[current].fields[name]
+                resolved.append((name, field))
+                if index < len(path) - 2:
+                    current = field.relation
+            else:
+                # Keep fields scoped to their relationship occurrence, not just their model.
+                target = projected.setdefault(path[0], {"fields": {}})["fields"]
+                for index, (name, field) in enumerate(resolved):
+                    payload = target.setdefault(name, self._field_payload(field))
+                    if index < len(resolved) - 1:
+                        target = payload.setdefault("fields", {})
+        if not projected:
+            for root in preferred_roots:
+                if root in selected_fields:
+                    projected[root] = {"fields": {}}
+                    break
+        return projected
     def _find_roots(
         self,
         schema: OrmSchema,

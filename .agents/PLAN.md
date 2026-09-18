@@ -210,9 +210,9 @@ data/processed/evaluation_report.json
 
 ## Current Phase
 
-The current phase is stabilizing the plan and documentation after backend prototype progress.
+The current phase is V2 schema expansion with an independently verified opt-in expanded API runtime.
 
-The immediate goal is not to add a new feature. The goal is to keep `.agents/PLAN.md` accurate as the single source of truth, then keep marking tasks as done when they are actually implemented and verified.
+The next goal is broader Arabic and ambiguous-query coverage, budget behavior review, and mapper fidelity checks before adopting a larger source by default. Keep this plan synchronized with verified progress.
 
 ## Next Steps
 
@@ -272,3 +272,23 @@ For backend development:
 - `.agents/PLAN.md` is the only accepted plan source for this repository.
 - Details of the five reviewed repositories are not documented inside this repo, so the plan records only general lessons without names or unverified claims.
 
+
+## V2 Progress Update
+
+- [x] Inspect the larger source and identify missing sales/product tables.
+- [x] Verify the larger source through pglast after fixing ALTER defaults, primary keys and inherited columns.
+- [x] Harden regex fallback for ALTER primary keys, inheritance and statement boundaries on the existing full source.
+- [ ] Prepare a larger sales-capable source and verify ORM mapping and projection quality.
+
+Current development branch is `v2`. The instruction layer and v1 backend snapshot were committed and pushed on `v1`; earlier develop/documentation-pending entries above are historical.
+
+## V2 Sales-Capable Fixture Progress
+
+- [x] Prepare `schema.expanded.sql`: existing full source plus explicitly synthetic sales/product metadata.
+- [x] Verify parser and ORM mapper relationships on the expanded fixture.
+- [x] Adapt product-name understanding to template paths without breaking the focused sample.
+- [x] Add explicit salesperson-name understanding with role-specific relationship paths.
+- [x] Add initial sales-context aliases and golden tests for country, region, order company/currency and product category.
+- [x] Evaluate six initial expanded projection cases; default remains unchanged.
+- [x] Expand evaluation to 14 initial role-specific cases.
+- [x] Verify opt-in expanded API runtime and source-specific cache isolation; default fixture stays unchanged.

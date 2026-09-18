@@ -70,6 +70,7 @@ class QueryUnderstanding(BaseModel):
     required_models: list[str] = Field(default_factory=list)
     required_fields: dict[str, list[str]] = Field(default_factory=dict)
     anchor_model: str | None = None
+    field_paths: list[list[str]] = Field(default_factory=list)
 
 
 class ConfidenceScores(BaseModel):

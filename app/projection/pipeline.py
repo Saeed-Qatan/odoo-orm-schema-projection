@@ -28,7 +28,7 @@ class SchemaProjectionPipeline:
         self.linker = SchemaLinker()
         self.pruner = SchemaPruner()
         self.projector = SchemaProjector()
-        self.query_understanding = QueryUnderstandingExtractor()
+        self.query_understanding = QueryUnderstandingExtractor(schema=schema)
 
     def run(self, query: str, options: ProjectionOptions) -> ProjectionResponse:
         started = perf_counter()
@@ -51,7 +51,19 @@ class SchemaProjectionPipeline:
         anchor_model = understanding.anchor_model or self._anchor_model(candidates, linked_models)
 
         graph_started = perf_counter()
-        connected_models, relation_fields, paths = self._connect_from_anchor(anchor_model, linked_models, budget.max_depth)
+        explicit_relationships = None
+        active_field_paths = []
+        if understanding.field_paths:
+            active_field_paths = [
+                path for path in understanding.field_paths if len(path) - 2 <= budget.max_depth
+            ]
+            linked_models, linked_fields, paths, explicit_relationships = self._connect_field_paths(active_field_paths)
+            if not linked_models and anchor_model in self.schema.models:
+                linked_models = {anchor_model}
+            connected_models = linked_models
+            relation_fields = {}
+        else:
+            connected_models, relation_fields, paths = self._connect_from_anchor(anchor_model, linked_models, budget.max_depth)
         selected_model_set = self._filter_allowed_models(linked_models, connected_models, paths) & set(self.schema.models)
         selected_models = self._ordered_models(anchor_model, selected_model_set, candidates)
         graph_ms = (perf_counter() - graph_started) * 1000
@@ -65,7 +77,30 @@ class SchemaProjectionPipeline:
             budget,
         )
         safe_fields, hallucinated_models, hallucinated_fields = self._validate(pruned_fields)
-        projected = self.projector.project(self.schema, safe_fields, preferred_roots=[anchor_model] if anchor_model else None)
+        if understanding.field_paths:
+            retained_paths = []
+            for path in active_field_paths:
+                current = path[0]
+                for index, name in enumerate(path[1:]):
+                    if name not in safe_fields.get(current, set()):
+                        break
+                    if index < len(path) - 2:
+                        current = self.schema.models[current].fields[name].relation
+                else:
+                    retained_paths.append(path)
+            _, retained_fields, paths, explicit_relationships = self._connect_field_paths(retained_paths)
+            safe_fields = {
+                model: retained_fields[model] for model in safe_fields if model in retained_fields
+            }
+            if not safe_fields and anchor_model in self.schema.models:
+                safe_fields = {anchor_model: set()}
+            active_field_paths = retained_paths
+            removed_fields = [
+                f"{model}.{name}" for model in selected_models
+                for name in self.schema.models[model].fields
+                if name not in safe_fields.get(model, set())
+            ]
+        projected = self.projector.project(self.schema, safe_fields, preferred_roots=[anchor_model] if anchor_model else None, field_paths=active_field_paths if understanding.field_paths else None)
         projection_ms = (perf_counter() - projection_started) * 1000
 
         total_fields_before = sum(len(model.fields) for model in self.schema.models.values())
@@ -91,13 +126,43 @@ class SchemaProjectionPipeline:
                 query_understanding=understanding,
                 retrieval=candidates,
                 paths=paths,
-                relationship_paths=self._relationship_paths(paths),
+                relationship_paths=explicit_relationships if explicit_relationships is not None else self._relationship_paths(paths),
                 removed_fields=removed_fields,
                 confidence=self._confidence(candidates, linked_fields, paths),
                 metrics=metrics,
             )
 
         return ProjectionResponse(query=query, models=list(safe_fields.keys()), schema=projected, debug=debug)
+
+    def _connect_field_paths(
+        self, field_paths: list[list[str]]
+    ) -> tuple[set[str], dict[str, set[str]], list[list[str]], list[RelationshipPath]]:
+        models: set[str] = set()
+        fields: dict[str, set[str]] = {}
+        paths: list[list[str]] = []
+        relationships: list[RelationshipPath] = []
+        for field_path in field_paths:
+            current = field_path[0]
+            model_path = [current]
+            relation_names: dict[str, str] = {}
+            for index, name in enumerate(field_path[1:]):
+                field = self.schema.models[current].fields[name]
+                models.add(current)
+                fields.setdefault(current, set()).add(name)
+                if index < len(field_path) - 2:
+                    relation_names[current] = name
+                    current = field.relation
+                    model_path.append(current)
+            for length in range(2, len(model_path) + 1):
+                prefix = model_path[:length]
+                if prefix not in paths:
+                    paths.append(prefix)
+                    relationships.append(RelationshipPath(
+                        models=prefix,
+                        relation_fields={model: relation_names[model] for model in prefix[:-1]},
+                    ))
+        paths.sort(key=lambda path: (len(path), path[-1]))
+        return models, fields, paths, relationships
 
     def _anchor_model(self, candidates: list, linked_models: set[str]) -> str | None:
         for candidate in candidates:

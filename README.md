@@ -102,3 +102,77 @@ Current local golden-set snapshot:
 
 Query understanding and schema keywords are driven by `data/config/schema_aliases.json`. Update that file to add Arabic/English synonyms, entities, months, filters, and model/field aliases without changing Python code.
 
+
+## Expanded Schema Test Fixture (V2)
+
+`data/raw/odoo/schema.expanded.sql` preserves the existing `schema.full.sql`
+content and appends five synthetic tables: `sale_order`, `sale_order_line`,
+`product_product`, `product_template`, and `product_category`.
+This is not an authentic Odoo sales export and contains no business records.
+Do not execute it against an operational database.
+
+The fixture contains 173 tables, 1699 columns including inherited columns, and
+525 foreign keys. Parser and mapper tests validate the added relationships.
+Product names live on `product_template`; salesperson IDs reference `res_users`.
+The runtime default remains `schema.sql`. Query aliases and golden expectations
+must be adapted before adopting the expanded fixture for API requests.
+
+## Expanded Projection Verification
+
+Product entities support schema_variants in the alias JSON. The extractor chooses
+a variant only when its required fields exist in the active schema. Expanded
+product names resolve through product_tmpl_id to product.template.name; the
+focused sample retains its direct name field.
+
+The expanded golden set lives in app/evaluation/expanded_golden_set.py, with a
+separate report in data/processed/evaluation_report.expanded.json. Its six initial
+cases passed exact model/field expectations, including the Arabic demo query.
+Country/company/category and explicit salesperson-name query support still need
+role-specific mapping and additional evaluation. Do not switch the default merely
+because schema parsing succeeds.
+
+## Role-Specific Expanded Queries
+
+Initial sales-context support now covers customer country/region, order
+company/currency, product category and salesperson names. Explicit field paths
+prevent customer geography leaking into salesperson branches. Debug understanding
+includes an additive field_paths list. Product category needs max_depth=4.
+
+Run independent evaluation without replacing focused schema caches:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.evaluation.runner --expanded
+```
+
+Fourteen expanded cases passed exact model/field expectations, with no
+hallucination, over-selection or missing paths. Arbitrary ambiguous questions
+are not certified. Default API source remains the focused fixture.
+
+## Run The Expanded API Separately
+
+The default entrypoint remains app.main:app. Use the expanded synthetic fixture
+with independent ORM/graph caches and an independent index directory:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.expanded:app --host 127.0.0.1 --port 8002 --reload
+```
+
+Swagger: http://127.0.0.1:8002/docs
+Projection: POST http://127.0.0.1:8002/api/v1/project-schema
+
+Example role-specific request:
+
+```json
+{
+  "query": "أعطني المبيعات مع اسم العميل وبلد العميل واسم المندوب",
+  "options": {"debug": true, "max_models": 5, "max_depth": 3}
+}
+```
+
+For product-category requests, set max_depth to 4. Expanded source definitions
+remain a synthetic fixture, not authentic Odoo ERP metadata.
+
+ORM cache reuse now requires source identity/content hashes and artifact hash
+validation, including parser/mapper/model/alias inputs. Local metadata sidecars
+are ignored by Git. Old caches without metadata are rebuilt once. Expanded
+ORM/graph artifacts have .expanded.json names and do not replace focused files.

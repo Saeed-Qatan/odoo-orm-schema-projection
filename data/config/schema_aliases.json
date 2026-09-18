@@ -1,49 +1,368 @@
 {
   "models": {
-    "sale.order": ["sales", "sale", "مبيعات", "بيع", "طلب بيع", "أمر بيع"],
-    "sale.order.line": ["sales line", "order line", "سطر البيع", "بنود البيع", "سطور البيع"],
-    "res.partner": ["customer", "client", "partner", "عميل", "زبون", "جهة اتصال"],
-    "product.product": ["product", "item", "منتج", "صنف"],
-    "account.move": ["invoice", "bill", "فاتورة", "قيد محاسبي"]
+    "sale.order": [
+      "sales",
+      "sale",
+      "مبيعات",
+      "بيع",
+      "طلب بيع",
+      "أمر بيع"
+    ],
+    "sale.order.line": [
+      "sales line",
+      "order line",
+      "سطر البيع",
+      "بنود البيع",
+      "سطور البيع"
+    ],
+    "res.partner": [
+      "customer",
+      "client",
+      "partner",
+      "عميل",
+      "زبون",
+      "جهة اتصال"
+    ],
+    "product.product": [
+      "product",
+      "item",
+      "منتج",
+      "صنف"
+    ],
+    "account.move": [
+      "invoice",
+      "bill",
+      "فاتورة",
+      "قيد محاسبي"
+    ]
   },
   "fields": {
-    "partner_id": ["customer", "client", "partner", "عميل", "زبون"],
-    "product_id": ["product", "item", "منتج", "صنف"],
-    "product_uom_qty": ["quantity", "qty", "كمية", "الكمية"],
-    "date_order": ["date", "order date", "تاريخ", "تاريخ الطلب", "يناير", "فبراير", "مارس", "أبريل", "ابريل", "مايو", "يونيو", "يوليو", "أغسطس", "اغسطس", "سبتمبر", "أكتوبر", "اكتوبر", "نوفمبر", "ديسمبر"],
-    "amount_total": ["total", "amount", "إجمالي", "اجمالي", "مبلغ", "قيمة"],
-    "state": ["state", "status", "حالة", "الحالة"],
-    "name": ["name", "اسم", "الاسم"],
-    "user_id": ["salesperson", "user", "مندوب", "البائع", "أحمد", "احمد"]
+    "partner_id": [
+      "customer",
+      "client",
+      "partner",
+      "عميل",
+      "زبون"
+    ],
+    "product_id": [
+      "product",
+      "item",
+      "منتج",
+      "صنف"
+    ],
+    "product_uom_qty": [
+      "quantity",
+      "qty",
+      "كمية",
+      "الكمية"
+    ],
+    "date_order": [
+      "date",
+      "order date",
+      "تاريخ",
+      "تاريخ الطلب",
+      "يناير",
+      "فبراير",
+      "مارس",
+      "أبريل",
+      "ابريل",
+      "مايو",
+      "يونيو",
+      "يوليو",
+      "أغسطس",
+      "اغسطس",
+      "سبتمبر",
+      "أكتوبر",
+      "اكتوبر",
+      "نوفمبر",
+      "ديسمبر"
+    ],
+    "amount_total": [
+      "total",
+      "amount",
+      "إجمالي",
+      "اجمالي",
+      "مبلغ",
+      "قيمة"
+    ],
+    "state": [
+      "state",
+      "status",
+      "حالة",
+      "الحالة"
+    ],
+    "name": [
+      "name",
+      "اسم",
+      "الاسم"
+    ],
+    "user_id": [
+      "salesperson",
+      "user",
+      "مندوب",
+      "البائع",
+      "أحمد",
+      "احمد"
+    ]
   },
   "intents": {
-    "sales_analysis": ["مبيعات", "sales", "sale", "بيع"]
+    "sales_analysis": [
+      "مبيعات",
+      "sales",
+      "sale",
+      "بيع"
+    ]
   },
   "entities": {
     "customer": {
-      "terms": ["عميل", "زبون", "customer", "client", "partner"],
-      "required_models": ["res.partner"],
-      "required_fields": {"sale.order": ["partner_id"], "res.partner": ["name"]}
+      "terms": [
+        "عميل",
+        "زبون",
+        "customer",
+        "client",
+        "partner"
+      ],
+      "required_models": [
+        "res.partner"
+      ],
+      "required_fields": {
+        "sale.order": [
+          "partner_id"
+        ],
+        "res.partner": [
+          "name"
+        ]
+      },
+      "field_paths": [
+        [
+          "sale.order",
+          "partner_id",
+          "name"
+        ]
+      ]
     },
     "product": {
-      "terms": ["منتج", "صنف", "product", "item"],
-      "required_models": ["sale.order.line", "product.product"],
-      "required_fields": {"sale.order.line": ["product_id"], "product.product": ["name"]}
+      "terms": [
+        "منتج",
+        "صنف",
+        "product",
+        "item"
+      ],
+      "required_models": [
+        "sale.order.line",
+        "product.product"
+      ],
+      "required_fields": {
+        "sale.order.line": [
+          "product_id"
+        ],
+        "product.product": [
+          "name"
+        ]
+      },
+      "schema_variants": [
+        {
+          "required_models": [
+            "sale.order.line",
+            "product.product",
+            "product.template"
+          ],
+          "required_fields": {
+            "product.product": [
+              "product_tmpl_id"
+            ],
+            "product.template": [
+              "name"
+            ],
+            "sale.order.line": [
+              "product_id"
+            ]
+          },
+          "field_paths": [
+            [
+              "sale.order",
+              "sale_order_line_ids",
+              "product_id",
+              "product_tmpl_id",
+              "name"
+            ]
+          ]
+        }
+      ],
+      "field_paths": [
+        [
+          "sale.order",
+          "sale_order_line_ids",
+          "product_id",
+          "name"
+        ]
+      ]
     },
     "quantity": {
-      "terms": ["كمية", "كميه", "quantity", "qty"],
-      "required_models": ["sale.order.line"],
-      "required_fields": {"sale.order.line": ["product_uom_qty"]}
+      "terms": [
+        "كمية",
+        "كميه",
+        "quantity",
+        "qty"
+      ],
+      "required_models": [
+        "sale.order.line"
+      ],
+      "required_fields": {
+        "sale.order.line": [
+          "product_uom_qty"
+        ]
+      },
+      "field_paths": [
+        [
+          "sale.order",
+          "sale_order_line_ids",
+          "product_uom_qty"
+        ]
+      ]
     },
     "total": {
-      "terms": ["إجمالي", "اجمالي", "مبلغ", "قيمة", "total", "amount"],
-      "required_models": ["sale.order"],
-      "required_fields": {"sale.order": ["amount_total"]}
+      "terms": [
+        "إجمالي",
+        "اجمالي",
+        "مبلغ",
+        "قيمة",
+        "total",
+        "amount"
+      ],
+      "required_models": [
+        "sale.order"
+      ],
+      "required_fields": {
+        "sale.order": [
+          "amount_total"
+        ]
+      },
+      "field_paths": [
+        [
+          "sale.order",
+          "amount_total"
+        ]
+      ]
     },
     "status": {
-      "terms": ["حالة", "الحالة", "status", "state"],
-      "required_models": ["sale.order"],
-      "required_fields": {"sale.order": ["state"]}
+      "terms": [
+        "حالة",
+        "الحالة",
+        "status",
+        "state"
+      ],
+      "required_models": [
+        "sale.order"
+      ],
+      "required_fields": {
+        "sale.order": [
+          "state"
+        ]
+      },
+      "field_paths": [
+        [
+          "sale.order",
+          "state"
+        ]
+      ]
+    },
+    "salesperson_name": {
+      "field_paths": [
+        [
+          "sale.order",
+          "user_id",
+          "partner_id",
+          "name"
+        ]
+      ],
+      "terms": [
+        "salesperson",
+        "مندوب",
+        "المندوب",
+        "البائع"
+      ]
+    },
+    "country": {
+      "field_paths": [
+        [
+          "sale.order",
+          "partner_id",
+          "country_id",
+          "name"
+        ]
+      ],
+      "terms": [
+        "country",
+        "بلد",
+        "البلد",
+        "دولة",
+        "الدولة"
+      ]
+    },
+    "currency": {
+      "field_paths": [
+        [
+          "sale.order",
+          "currency_id",
+          "name"
+        ]
+      ],
+      "terms": [
+        "currency",
+        "عملة",
+        "العملة"
+      ]
+    },
+    "category": {
+      "field_paths": [
+        [
+          "sale.order",
+          "sale_order_line_ids",
+          "product_id",
+          "product_tmpl_id",
+          "categ_id",
+          "name"
+        ]
+      ],
+      "terms": [
+        "category",
+        "تصنيف",
+        "التصنيف",
+        "فئة",
+        "الفئة"
+      ]
+    },
+    "region": {
+      "field_paths": [
+        [
+          "sale.order",
+          "partner_id",
+          "state_id",
+          "name"
+        ]
+      ],
+      "terms": [
+        "region",
+        "منطقة",
+        "المنطقة",
+        "محافظة",
+        "المحافظة"
+      ]
+    },
+    "company": {
+      "field_paths": [
+        [
+          "sale.order",
+          "company_id",
+          "name"
+        ]
+      ],
+      "terms": [
+        "company",
+        "شركة",
+        "الشركة"
+      ]
     }
   },
   "months": {
@@ -65,9 +384,22 @@
   },
   "filters": {
     "salesperson": {
-      "terms": ["احمد", "أحمد"],
+      "terms": [
+        "احمد",
+        "أحمد"
+      ],
       "value": "أحمد",
-      "required_fields": {"sale.order": ["user_id"]}
+      "required_fields": {
+        "sale.order": [
+          "user_id"
+        ]
+      },
+      "field_paths": [
+        [
+          "sale.order",
+          "user_id"
+        ]
+      ]
     }
   }
 }

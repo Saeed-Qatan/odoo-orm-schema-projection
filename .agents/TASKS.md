@@ -3,90 +3,46 @@
 ## Current Task
 
 ### Title
-
-Backend Protection And Limits Hardening
+Opt-In Expanded API Runtime And Source-Isolated Caches
 
 ### Status
-
 DONE
 
-Allowed:
-
-- TODO
-- IN_PROGRESS
-- BLOCKED
-- REVIEW
-- DONE
-
 ### Goal
-
-Stabilize backend protection behavior for the schema projection API by verifying
-rate limits, request timeout handling, query length validation, and budget limit
-clamping with focused tests.
+Allow expanded-fixture API testing without replacing the focused runtime or reusing ORM caches from a different source.
 
 ### Scope
-
-Expected modules/files:
-
-- `app/api/routes/projection.py`
-- `tests/test_api.py`
-- `tests/test_projection.py`
-- `.agents/PLAN.md`
-- `.agents/CURRENT_STATE.md`
-- `.agents/TASKS.md`
+- app/application.py
+- app/expanded.py
+- app/main.py
+- app/app_state.py
+- app/api/routes/projection.py
+- app/api/routes/schema.py
+- app/schema/repository.py
+- tests/test_api.py
+- tests/test_schema_repository.py
+- .gitignore
+- README and relevant .agents documentation
+- generated source-specific ORM/graph artifacts
 
 ### Do Not Change
+- endpoint names and response contracts
+- default schema source
+- production databases
+- unrelated application behavior
 
-- public endpoint names
-- successful API response shape
-- schema source files
-- projection selection behavior unrelated to protection
-- generated schema/graph artifacts unless evaluation regenerates reports
-
-### Requirements
-
-- Keep routers thin.
-- Return `429` when projection or schema read rate limits are exceeded.
-- Return `504` when projection execution exceeds `request_timeout_ms`.
-- Keep query length validation active.
-- Keep budget clamping for oversized projection options.
-- Do not add new dependencies.
-
-### Acceptance Criteria
-
-The task is complete when:
-
-- projection rate limit is covered by a test.
-- schema read rate limit is covered by a test.
-- projection timeout is covered by a test.
-- query length validation is covered by a test.
-- budget clamping is covered by a test.
-- full tests pass.
-- evaluation remains clean with zero hallucination and zero over-selection.
+### Requirements And Acceptance Criteria
+- Construct app/pipeline/routers with one explicit settings instance.
+- Keep expanded source artifacts separate from focused artifacts.
+- Cache validity must depend on source identity/content, parser/mapper/models/aliases and artifact integrity.
+- Test cache reuse, source switching and content changes with unchanged timestamps.
+- Verify schema/model endpoints and Arabic/product projection over the expanded API.
 
 ### Verification
-
-Executed successfully:
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest tests\test_api.py tests\test_projection.py
-.\.venv\Scripts\python.exe -m pytest
-.\.venv\Scripts\python.exe -m app.evaluation.runner
-```
-
-Observed results:
-
-- Targeted tests: 8 passed.
-- Full `pytest`: 18 passed.
-- Evaluation cases: 20.
-- Hallucination count: 0.
-- Over-selection count: 0.
-- Relationship validity average: 1.0.
+- Full pytest: 36 passed, 2 dependency deprecation warnings, 7.22s.
+- Live 8002 health: ok; model count: 173.
+- Live Arabic role projection: correct separate customer/country and salesperson branches, zero hallucination; pipeline latency 30.437ms.
+- Existing 8001 server left running.
 
 ### Notes
-
-- `app/api/routes/projection.py` now catches both `TimeoutError` and `asyncio.TimeoutError` for projection timeout handling.
-- `tests/test_api.py` covers query length, projection rate limit, schema read rate limit, and timeout behavior.
-- `tests/test_projection.py` covers budget clamping for oversized options.
-
-
+Expanded source is still synthetic. Current changes are not committed or pushed. Next: broader Arabic ambiguity, budget coverage and mapper fidelity review before default adoption or authentic Odoo integration.

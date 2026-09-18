@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from app.core.config import get_settings
+from app.core.config import Settings, get_settings
 from app.core.rate_limit import InMemoryRateLimiter
 from app.schema.models import OrmSchema
 
 
-def create_schema_router(schema: OrmSchema, limiter: InMemoryRateLimiter) -> APIRouter:
+def create_schema_router(schema: OrmSchema, limiter: InMemoryRateLimiter, settings: Settings | None = None) -> APIRouter:
     router = APIRouter(prefix="/api/v1/schema", tags=["schema"])
 
     def read_limit(request: Request) -> None:
-        settings = get_settings()
-        limiter.check(request, settings.read_rate_limit_per_minute, "schema-read")
+        runtime_settings = settings or get_settings()
+        limiter.check(request, runtime_settings.read_rate_limit_per_minute, "schema-read")
 
     @router.get("/models", dependencies=[Depends(read_limit)])
     def list_models() -> dict:
