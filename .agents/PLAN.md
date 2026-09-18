@@ -284,29 +284,31 @@ The project can now test broader schema relationships through the opt-in expande
 
 - [x] Add more Arabic aliases for common misspellings and variants.
 - [x] Add tests for typo-like cases such as `المندو` vs `المندوب`.
-- [ ] Improve role detection for salesperson, customer, country, branch, company, currency, category, product, quantity, status, total, and date.
+- [x] Improve role detection for salesperson, customer, country, branch, company, currency, category, product, quantity, status, total, and date on supported aliases.
 - [x] Keep new Arabic aliases in `data/config/schema_aliases.json`; Python logic is limited to conservative fuzzy matching.
 
 ### Step 3 - Ambiguity Handling
 
-- [ ] Decide how to represent ambiguous phrases such as `أحمد`: customer, salesperson, or generic person filter.
-- [ ] Add debug output that exposes ambiguity when confidence is not enough.
-- [ ] Add golden cases for ambiguous and partially understood Arabic questions.
+- [x] Decide how to represent ambiguous phrases such as `أحمد`: unsupported with debug ambiguity unless sales/customer/salesperson context is present.
+- [x] Add debug output that exposes ambiguity when confidence is not enough.
+- [x] Add golden/evaluation and focused tests for typo, broader Arabic roles, ambiguity and unsupported questions.
 - [x] Avoid expanding unrelated schema branches when ambiguity exists.
 
 ### Step 4 - Budget And Negative-Case Coverage
 
-- [ ] Add tests for low `max_depth`, `max_models`, and `max_total_fields` on expanded relationship paths.
-- [ ] Add tests for unsupported requests and unfulfillable paths.
-- [ ] Confirm incomplete paths are removed consistently from output and debug.
+- [x] Add tests for low `max_depth`, `max_models`, and `max_total_fields` on expanded relationship paths.
+- [x] Add tests for unsupported requests and unfulfillable paths.
+- [x] Confirm incomplete paths are removed consistently from output and debug.
 
 ### Step 5 - Mapper Fidelity Review
 
-- [ ] Review whether current field naming and inferred reverse relation naming are close enough to Odoo expectations.
-- [ ] Document known differences between synthetic fixture behavior and real Odoo schema behavior.
-- [ ] Add mapper tests for any confirmed fidelity gaps.
+- [x] Review whether current field naming and inferred reverse relation naming are close enough to Odoo expectations.
+- [x] Document known differences between synthetic fixture behavior and real Odoo schema behavior.
+- [x] Add mapper tests for confirmed fidelity gaps.
 
 ### Step 6 - Authentic Odoo Sales Schema
+
+Current status: blocked on an external authentic Odoo schema export. The repository now has a readiness checker, but it cannot turn the synthetic fixture into a genuine export.
 
 - [ ] Obtain or generate an authentic Odoo schema export that contains sales, product, partner, user, company, currency, stock, purchase, and accounting metadata.
 - [ ] Parse it without replacing the current default until evaluation passes.
@@ -315,7 +317,7 @@ The project can now test broader schema relationships through the opt-in expande
 
 ### Step 7 - Dense Retrieval Decision
 
-- [ ] Keep dense retrieval disabled by default.
+- [x] Keep dense retrieval disabled by default.
 - [ ] Evaluate dense retrieval only after the authentic larger schema exists.
 - [ ] Adopt dense retrieval only if it improves recall without increasing hallucination or unacceptable latency.
 
@@ -326,6 +328,14 @@ The project can now test broader schema relationships through the opt-in expande
 - Projection responses now include additive fields: `supported` and `unsupported_reason`.
 - Out-of-domain questions return HTTP `200 OK` with `supported=false`, `models=[]`, and `schema={}`.
 - The pipeline no longer falls back to `sale.order` or the first schema model for unsupported questions.
+## Latest V2 Hardening Update
+
+- Broader Arabic role detection is covered by tests and expanded golden cases.
+- Ambiguous person-only queries such as `اعطني معلومات احمد` expose `ambiguities` in debug and remain unsupported instead of selecting a schema branch.
+- Budget and negative path cases are tested for low depth and total-field limits.
+- Mapper fidelity review is documented: inferred reverse relation names are synthetic, e.g. `sale_order_line_ids`, and are not claimed to match every real Odoo field name such as `order_line`.
+- `app.schema.authenticity` can evaluate whether a supplied SQL schema is ready for authentic Odoo scale testing.
+- Dense retrieval remains disabled by default until an authentic larger schema exists.
 ## Runtime Commands
 
 Focused runtime:

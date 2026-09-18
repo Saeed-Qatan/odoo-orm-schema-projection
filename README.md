@@ -176,3 +176,32 @@ ORM cache reuse now requires source identity/content hashes and artifact hash
 validation, including parser/mapper/model/alias inputs. Local metadata sidecars
 are ignored by Git. Old caches without metadata are rebuilt once. Expanded
 ORM/graph artifacts have .expanded.json names and do not replace focused files.
+## Unsupported And Ambiguous Queries
+
+`POST /api/v1/project-schema` returns additive fields `supported` and
+`unsupported_reason`. Out-of-domain questions return HTTP 200 with `supported:
+false`, `models: []`, and `schema: {}` so downstream agents can handle the case
+without treating it as a transport failure.
+
+Person-like filters without domain context are exposed in debug as `ambiguities`.
+For example, `اعطني معلومات احمد` does not select `sale.order` because `احمد`
+could be a salesperson, customer, or generic person without enough context.
+
+## Authentic Schema Readiness
+
+The expanded schema is still synthetic. To inspect whether a supplied SQL schema
+is ready for authentic Odoo scale testing, run:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.schema.authenticity data/raw/odoo/schema.expanded.sql
+```
+
+A ready schema must not contain synthetic fixture markers and must include the
+core sales/product/partner/user/company/currency metadata. Stock, purchase, and
+accounting models are reported separately as scale-readiness requirements.
+
+## Dense Retrieval Decision
+
+Dense retrieval remains disabled by default. It should only be evaluated after an
+authentic larger Odoo schema exists and only adopted if it improves recall without
+increasing hallucination or unacceptable latency.

@@ -225,3 +225,56 @@ def test_ambiguous_person_query_does_not_fallback_to_schema() -> None:
     assert result.supported is False
     assert result.models == []
     assert result.schema_ == {}
+
+def test_expanded_combined_arabic_roles_project_only_requested_paths() -> None:
+    raw = PostgresSqlSchemaAdapter().load(Path('data/raw/odoo/schema.expanded.sql'))
+    pipeline = SchemaProjectionPipeline(OrmMapper().map(raw), Settings(enable_dense_retrieval=False))
+    result = pipeline.run(
+        'اعرض مبيعات العميل والمنطقة والشركة والعملة وحالة الطلب والإجمالي',
+        ProjectionOptions(debug=True, max_depth=4, max_models=8, max_total_fields=50),
+    )
+
+    assert result.supported is True
+    assert {'sale.order', 'res.partner', 'res.country.state', 'res.company', 'res.currency'}.issubset(set(result.models))
+    fields = result.schema_['sale.order']['fields']
+    assert {'partner_id', 'company_id', 'currency_id', 'state', 'amount_total'} <= set(fields)
+    assert set(fields['partner_id']['fields']) == {'name', 'state_id'}
+    assert set(fields['partner_id']['fields']['state_id']['fields']) == {'name'}
+    assert set(fields['company_id']['fields']) == {'name'}
+    assert set(fields['currency_id']['fields']) == {'name'}
+    assert 'res.country' not in result.models
+    assert result.debug.metrics.hallucinated_models == 0
+    assert result.debug.metrics.hallucinated_fields == 0
+
+
+def test_expanded_category_path_is_removed_when_depth_budget_is_too_low() -> None:
+    raw = PostgresSqlSchemaAdapter().load(Path('data/raw/odoo/schema.expanded.sql'))
+    pipeline = SchemaProjectionPipeline(OrmMapper().map(raw), Settings(enable_dense_retrieval=False))
+    result = pipeline.run('أعطني تصنيف المنتج في المبيعات', ProjectionOptions(debug=True, max_depth=2))
+
+    assert result.supported is True
+    assert 'product.category' not in result.models
+    assert result.debug.paths == []
+    assert result.schema_['sale.order']['fields'] == {}
+    assert result.debug.metrics.hallucinated_models == 0
+    assert result.debug.metrics.hallucinated_fields == 0
+
+
+def test_expanded_paths_are_trimmed_consistently_by_total_field_budget() -> None:
+    from app.evaluation.metrics import collect_projected_fields
+
+    raw = PostgresSqlSchemaAdapter().load(Path('data/raw/odoo/schema.expanded.sql'))
+    pipeline = SchemaProjectionPipeline(OrmMapper().map(raw), Settings(enable_dense_retrieval=False))
+    result = pipeline.run(
+        'sales customer country salesperson company currency total status',
+        ProjectionOptions(debug=True, max_depth=4, max_models=8, max_total_fields=3),
+    )
+
+    projected_fields = collect_projected_fields(result.schema_)
+    assert len(projected_fields) <= 3
+    assert result.debug.metrics.total_fields_after == len(projected_fields)
+    assert result.debug.metrics.hallucinated_models == 0
+    assert result.debug.metrics.hallucinated_fields == 0
+
+def test_dense_retrieval_remains_disabled_by_default() -> None:
+    assert Settings(_env_file=None).enable_dense_retrieval is False

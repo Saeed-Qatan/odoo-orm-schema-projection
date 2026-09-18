@@ -54,3 +54,25 @@ def test_query_understanding_marks_general_question_as_out_of_domain() -> None:
     assert understanding.filters == {}
     assert understanding.required_fields == {}
     assert understanding.anchor_model is None
+
+def test_ambiguous_person_filter_is_exposed_without_sales_context() -> None:
+    understanding = QueryUnderstandingExtractor().understand("اعطني معلومات احمد")
+
+    assert understanding.filters == {}
+    assert understanding.required_fields == {}
+    assert understanding.anchor_model is None
+    assert understanding.ambiguities
+    ambiguity = understanding.ambiguities[0]
+    assert ambiguity.term == "احمد"
+    assert set(ambiguity.candidates) == {"salesperson", "customer", "generic_person"}
+
+
+def test_query_understanding_detects_broader_arabic_roles() -> None:
+    understanding = QueryUnderstandingExtractor().understand(
+        "اعرض مبيعات العميل والمنطقة والشركة والعملة وحالة الطلب والإجمالي"
+    )
+
+    assert understanding.intent == "sales_analysis"
+    assert {"sales", "customer", "region", "company", "currency", "status", "total"}.issubset(
+        set(understanding.entities)
+    )

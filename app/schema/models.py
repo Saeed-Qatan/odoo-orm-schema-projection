@@ -71,6 +71,12 @@ class MatchedTerm(BaseModel):
     match_type: str = "exact"
 
 
+class Ambiguity(BaseModel):
+    term: str
+    candidates: list[str] = Field(default_factory=list)
+    reason: str
+
+
 class QueryUnderstanding(BaseModel):
     intent: str | None = None
     entities: list[str] = Field(default_factory=list)
@@ -80,6 +86,7 @@ class QueryUnderstanding(BaseModel):
     anchor_model: str | None = None
     field_paths: list[list[str]] = Field(default_factory=list)
     matched_terms: list[MatchedTerm] = Field(default_factory=list)
+    ambiguities: list[Ambiguity] = Field(default_factory=list)
 
 
 class ConfidenceScores(BaseModel):

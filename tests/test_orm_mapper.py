@@ -13,3 +13,13 @@ def test_orm_mapper_converts_tables_and_relations() -> None:
     assert schema.models["sale.order"].fields["partner_id"].relation == "res.partner"
     assert schema.models["res.partner"].fields["sale_order_ids"].type == "one2many"
     assert schema.models["res.partner"].fields["sale_order_ids"].inferred is True
+
+def test_orm_mapper_reverse_relation_name_is_synthetic_and_documented() -> None:
+    raw = PostgresSqlSchemaAdapter().load(Path("data/raw/odoo/schema.sql"))
+    schema = OrmMapper().map(raw)
+
+    field = schema.models["sale.order"].fields["sale_order_line_ids"]
+    assert field.type == "one2many"
+    assert field.relation == "sale.order.line"
+    assert field.inverse == "order_id"
+    assert field.inferred is True

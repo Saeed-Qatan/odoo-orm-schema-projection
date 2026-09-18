@@ -2,7 +2,7 @@ from rapidfuzz import fuzz
 
 from app.retrieval.base import normalize_text, tokenize
 from app.schema.aliases import AliasCatalog, get_alias_catalog
-from app.schema.models import MatchedTerm, OrmSchema, QueryUnderstanding
+from app.schema.models import Ambiguity, MatchedTerm, OrmSchema, QueryUnderstanding
 
 
 class QueryIntentResolver:
@@ -94,6 +94,7 @@ class QueryUnderstandingExtractor:
         required_models: list[str] = []
         required_fields: dict[str, list[str]] = {}
         field_paths: list[list[str]] = []
+        ambiguities: list[Ambiguity] = []
 
         def add_model(model: str) -> None:
             if model not in required_models:
@@ -164,6 +165,19 @@ class QueryUnderstandingExtractor:
             if intent == "sales_analysis" and self.schema is not None:
                 field_paths.append(["sale.order", "date_order"])
 
+        if not intent and not entities:
+            for config in self.aliases.filters.values():
+                terms = {normalize_text(term) for term in config.get("terms", [])}
+                ambiguous_terms = sorted(tokens & terms)
+                for term in ambiguous_terms:
+                    ambiguities.append(
+                        Ambiguity(
+                            term=term,
+                            candidates=["salesperson", "customer", "generic_person"],
+                            reason="Person-like filter was found without a supported sales/customer/salesperson context.",
+                        )
+                    )
+
         if intent == "sales_analysis" or entities:
             for filter_name, config in self.aliases.filters.items():
                 terms = {normalize_text(term) for term in config.get("terms", [])}
@@ -181,6 +195,7 @@ class QueryUnderstandingExtractor:
             anchor_model=anchor_model,
             field_paths=field_paths,
             matched_terms=matched_terms,
+            ambiguities=ambiguities,
         )
 
     def _month(self, normalized_query: str) -> str | None:

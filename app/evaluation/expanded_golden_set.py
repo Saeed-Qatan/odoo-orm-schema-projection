@@ -122,3 +122,27 @@ EXPANDED_GOLDEN_SET.extend([
         'max_extra_fields': 0,
     },
 ])
+EXPANDED_GOLDEN_SET.extend([
+    {
+        'query': 'أعطني المبيعات مع اسم العميل وبلد العميل واسم المندو',
+        'expected_models': ['sale.order', 'res.users', 'res.partner', 'res.country'],
+        'expected_fields': {
+            'sale.order': ['partner_id', 'user_id'], 'res.users': ['partner_id'],
+            'res.partner': ['name', 'country_id'], 'res.country': ['name'],
+        },
+        'max_extra_fields': 0,
+    },
+    {
+        'query': 'اعرض مبيعات العميل والمنطقة والشركة والعملة وحالة الطلب والإجمالي',
+        'options': {'max_depth': 4, 'max_models': 8, 'max_total_fields': 50},
+        'expected_models': ['sale.order', 'res.partner', 'res.country.state', 'res.company', 'res.currency'],
+        'expected_fields': {
+            'sale.order': ['partner_id', 'company_id', 'currency_id', 'state', 'amount_total'],
+            'res.partner': ['name', 'state_id'],
+            'res.country.state': ['name'],
+            'res.company': ['name'],
+            'res.currency': ['name'],
+        },
+        'max_extra_fields': 0,
+    },
+])

@@ -121,3 +121,14 @@ Remaining work is grouped under:
 - Ambiguous person-only questions such as `اعطني معلومات احمد` no longer fallback to `sale.order` without a sales/customer/salesperson context.
 - Targeted verification passed: 26 tests in `tests/test_query_understanding.py`, `tests/test_projection.py`, and `tests/test_api.py`.
 - Full verification after this change: targeted tests 26 passed, full pytest 42 passed, expanded evaluation 14 cases with precision/recall 1.0, hallucination/over-selection/failed paths 0, p95 26.28ms.
+## V2 Remaining-Plan Hardening
+
+- Broader Arabic role detection is covered for salesperson, customer, country/region, company/branch, currency, category, product, quantity, status, total and date aliases.
+- Query understanding now exposes `ambiguities` for person-like filters without enough context, such as `احمد` in `اعطني معلومات احمد`.
+- Ambiguous person-only questions remain unsupported and do not select a schema branch.
+- Expanded budget and negative-path behavior is tested for low depth and total-field limits.
+- Expanded golden set now includes 16 cases and covers typo and combined Arabic role queries. Latest expanded evaluation: precision/recall 1.0, hallucination/over-selection/failed paths 0, p95 23.402ms.
+- Mapper fidelity review is documented: inferred reverse relation names are synthetic and validated by tests, but not claimed to match every real Odoo field name.
+- Added `app.schema.authenticity` to evaluate whether a supplied SQL source is an authentic Odoo scale candidate.
+- Current local sources are not authentic Odoo sales exports. Authentic Odoo schema adoption remains blocked until the user provides or generates a real export.
+- Dense retrieval remains disabled by default and is not adopted until authentic large-schema evaluation justifies it. Latest full pytest: 51 passed, 2 warnings.
