@@ -169,6 +169,14 @@ POST /api/v1/project-schema
 Do not change these endpoints or response shapes without updating the API
 specification and tests.
 
+## Projection Response Contract Notes
+
+`POST /api/v1/project-schema` keeps the same endpoint and schema projection shape. The response also includes additive status fields:
+
+- `supported`: `true` for supported schema projection queries and `false` for out-of-domain queries.
+- `unsupported_reason`: explains why an unsupported query returned an empty projection.
+
+For out-of-domain questions, the endpoint returns HTTP `200 OK` with `models=[]` and `schema={}`. This is intentional so downstream agents can handle unsupported questions without treating them as transport errors.
 ## Verification Commands
 
 Run tests:

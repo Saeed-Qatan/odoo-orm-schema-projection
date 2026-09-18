@@ -182,3 +182,46 @@ def test_explicit_paths_do_not_report_models_pruned_by_budget() -> None:
     assert result.schema_['sale.order']['fields'] == {}
     assert result.debug.paths == []
     assert result.debug.metrics.total_fields_after == len(collect_projected_fields(result.schema_)) == 0
+
+
+def test_expanded_arabic_salesperson_typo_is_matched() -> None:
+    raw = PostgresSqlSchemaAdapter().load(Path('data/raw/odoo/schema.expanded.sql'))
+    pipeline = SchemaProjectionPipeline(OrmMapper().map(raw), Settings(enable_dense_retrieval=False))
+    result = pipeline.run('أعطني المبيعات مع اسم العميل وبلد العميل واسم المندو', ProjectionOptions(debug=True))
+
+    assert result.supported is True
+    assert result.debug is not None
+    assert 'salesperson_name' in result.debug.query_understanding.entities
+    assert any(
+        term.input == 'المندو'
+        and term.matched == 'المندوب'
+        and term.target == 'salesperson_name'
+        for term in result.debug.query_understanding.matched_terms
+    )
+    fields = result.schema_['sale.order']['fields']
+    assert set(fields['partner_id']['fields']) == {'name', 'country_id'}
+    assert set(fields['user_id']['fields']['partner_id']['fields']) == {'name'}
+    assert 'res.company' not in result.models
+
+
+def test_out_of_domain_query_returns_unsupported_without_schema() -> None:
+    pipeline = build_pipeline()
+    result = pipeline.run('ماهي تكنولوجيا المعلومات', ProjectionOptions(debug=True))
+
+    assert result.supported is False
+    assert result.unsupported_reason == 'Query is outside the supported Odoo schema projection domain.'
+    assert result.models == []
+    assert result.schema_ == {}
+    assert result.debug is not None
+    assert result.debug.query_understanding.intent is None
+    assert result.debug.metrics.hallucinated_models == 0
+    assert result.debug.metrics.hallucinated_fields == 0
+
+
+def test_ambiguous_person_query_does_not_fallback_to_schema() -> None:
+    pipeline = build_pipeline()
+    result = pipeline.run('اعطني معلومات احمد', ProjectionOptions(debug=True))
+
+    assert result.supported is False
+    assert result.models == []
+    assert result.schema_ == {}

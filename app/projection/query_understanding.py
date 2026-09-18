@@ -1,16 +1,20 @@
+from rapidfuzz import fuzz
+
 from app.retrieval.base import normalize_text, tokenize
 from app.schema.aliases import AliasCatalog, get_alias_catalog
-from app.schema.models import OrmSchema, QueryUnderstanding
+from app.schema.models import MatchedTerm, OrmSchema, QueryUnderstanding
 
 
 class QueryIntentResolver:
     def __init__(self, aliases: AliasCatalog) -> None:
         self.aliases = aliases
 
-    def resolve(self, tokens: set[str]) -> str | None:
+    def resolve(self, tokens: set[str], normalized_query: str) -> str | None:
         for intent, terms in self.aliases.intent_terms.items():
-            if tokens & {normalize_text(term) for term in terms}:
-                return intent
+            for term in terms:
+                normalized_term = normalize_text(term)
+                if normalized_term in tokens or normalized_term in normalized_query:
+                    return intent
         return None
 
 
@@ -18,13 +22,58 @@ class EntityResolver:
     def __init__(self, aliases: AliasCatalog) -> None:
         self.aliases = aliases
 
-    def resolve(self, tokens: set[str]) -> list[str]:
+    def resolve(self, tokens: set[str], normalized_query: str) -> tuple[list[str], list[MatchedTerm]]:
         entities: list[str] = []
+        matches: list[MatchedTerm] = []
         for entity, config in self.aliases.entities.items():
-            terms = {normalize_text(term) for term in config.get("terms", [])}
-            if tokens & terms:
+            terms = [str(term) for term in config.get("terms", [])]
+            normalized_terms = [(term, normalize_text(term)) for term in terms]
+            if self._has_exact_match(tokens, normalized_query, normalized_terms):
                 entities.append(entity)
-        return entities
+                continue
+            fuzzy_match = self._best_fuzzy_match(tokens, normalized_terms, entity)
+            if fuzzy_match:
+                entities.append(entity)
+                matches.append(fuzzy_match)
+        return entities, matches
+
+    def _has_exact_match(
+        self,
+        tokens: set[str],
+        normalized_query: str,
+        normalized_terms: list[tuple[str, str]],
+    ) -> bool:
+        return any(
+            term in tokens if " " not in term else term in normalized_query
+            for _original, term in normalized_terms
+        )
+
+    def _best_fuzzy_match(
+        self,
+        tokens: set[str],
+        normalized_terms: list[tuple[str, str]],
+        target: str,
+    ) -> MatchedTerm | None:
+        best: MatchedTerm | None = None
+        for token in tokens:
+            if len(token) < 4:
+                continue
+            for original, term in normalized_terms:
+                if len(term) < 4:
+                    continue
+                score = fuzz.ratio(token, term) / 100
+                threshold = 0.88
+                if score < threshold:
+                    continue
+                if best is None or score > best.score:
+                    best = MatchedTerm(
+                        input=token,
+                        matched=original,
+                        target=target,
+                        score=round(float(score), 4),
+                        match_type="fuzzy",
+                    )
+        return best
 
 
 class QueryUnderstandingExtractor:
@@ -39,8 +88,8 @@ class QueryUnderstandingExtractor:
     def understand(self, query: str) -> QueryUnderstanding:
         normalized = normalize_text(query)
         tokens = set(tokenize(normalized))
-        intent = self.intent_resolver.resolve(tokens)
-        entities = self.entity_resolver.resolve(tokens)
+        intent = self.intent_resolver.resolve(tokens, normalized)
+        entities, matched_terms = self.entity_resolver.resolve(tokens, normalized)
         filters: dict[str, str] = {}
         required_models: list[str] = []
         required_fields: dict[str, list[str]] = {}
@@ -115,11 +164,12 @@ class QueryUnderstandingExtractor:
             if intent == "sales_analysis" and self.schema is not None:
                 field_paths.append(["sale.order", "date_order"])
 
-        for filter_name, config in self.aliases.filters.items():
-            terms = {normalize_text(term) for term in config.get("terms", [])}
-            if tokens & terms:
-                filters[filter_name] = config.get("value", filter_name)
-                merge_required(config)
+        if intent == "sales_analysis" or entities:
+            for filter_name, config in self.aliases.filters.items():
+                terms = {normalize_text(term) for term in config.get("terms", [])}
+                if tokens & terms:
+                    filters[filter_name] = config.get("value", filter_name)
+                    merge_required(config)
 
         anchor_model = "sale.order" if intent == "sales_analysis" else (required_models[0] if required_models else None)
         return QueryUnderstanding(
@@ -130,6 +180,7 @@ class QueryUnderstandingExtractor:
             required_fields=required_fields,
             anchor_model=anchor_model,
             field_paths=field_paths,
+            matched_terms=matched_terms,
         )
 
     def _month(self, normalized_query: str) -> str | None:

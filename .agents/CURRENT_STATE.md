@@ -2,10 +2,9 @@
 
 ## Status
 
-The project is back in backend implementation work after organizing the
-repository-local agent instruction layer.
+The project is in V2 expansion hardening.
 
-The latest completed development task is backend protection and limits hardening.
+The latest completed backend task is the opt-in expanded API runtime with source-isolated schema caches. The latest documentation task synchronized the official project plan with the V2 progress that has already been committed and pushed.
 
 ## Branch
 
@@ -15,46 +14,9 @@ Current active development branch:
 v2
 ```
 
-## Backend Prototype State
+Remote branch `origin/v2` contains the expanded runtime and schema work.
 
-The backend prototype has been stabilized with:
-
-- FastAPI API endpoints.
-- Query understanding driven by `data/config/schema_aliases.json`.
-- PostgreSQL schema parsing with `pglast` and regex fallback.
-- ORM-like schema mapping.
-- NetworkX relationship graph traversal.
-- Query-guided traversal guard.
-- Field-level pruning.
-- Golden-set evaluation with `app.evaluation.runner`.
-- In-memory rate limiting on projection and schema read endpoints.
-- Projection request timeout handling that returns `504`.
-- Request/query and budget limit tests.
-
-## Verification Snapshot
-
-Latest successful checks:
-
-```powershell
-.\.venv\Scripts\python.exe -m pytest tests\test_api.py tests\test_projection.py
-.\.venv\Scripts\python.exe -m pytest
-.\.venv\Scripts\python.exe -m app.evaluation.runner
-```
-
-Observed latest results:
-
-- Targeted tests: 8 passed.
-- Full `pytest`: 18 passed.
-- Evaluation cases: 20.
-- Model precision/recall average: 1.0 / 1.0.
-- Field precision/recall average: 1.0 / 1.0.
-- Relationship validity average: 1.0.
-- Hallucination count: 0.
-- Over-selection count: 0.
-- Failed path count: 0.
-- P95 latency: 1.005ms.
-
-## Current Documentation Structure
+## Documentation Structure
 
 Keep this instruction structure:
 
@@ -86,69 +48,76 @@ The repository-local plan source for agent context is:
 
 The root `plan.md` has been removed. Agents must use `.agents/PLAN.md` as the only project plan source when preparing non-trivial project work.
 
+## Backend Prototype State
 
-## V2 Parser Progress
+The backend prototype has been stabilized with:
 
-- Active branch: `v2`; the previous verified snapshot is saved on remote `v1`.
-- Fixed pglast ALTER TABLE handling to ignore non-constraint payloads.
-- Added ALTER TABLE primary-key extraction and inherited-column resolution.
-- Verified full source directly through pglast: 168 tables, 1671 columns including inherited columns, 516 foreign keys, 131 tables with primary keys.
-- All extracted foreign-key endpoints passed validation.
-- Verification: parser tests 4 passed; full suite 20 passed (2 dependency deprecation warnings).
-- Default runtime source remains the focused sample. The full source has no sales/product tables.
-- Remaining: regex fallback primary keys, inheritance and statement-boundary correctness; larger sales-capable source; ORM mapping scale checks.
+- FastAPI API endpoints.
+- Query understanding driven by `data/config/schema_aliases.json`.
+- PostgreSQL schema parsing with `pglast` and regex fallback.
+- ORM-like schema mapping.
+- NetworkX relationship graph traversal.
+- Query-guided traversal guard.
+- Field-level pruning.
+- Golden-set evaluation with `app.evaluation.runner`.
+- In-memory rate limiting on projection and schema read endpoints.
+- Projection request timeout handling that returns `504`.
+- Request/query and budget limit tests.
 
-## V2 Fallback Verification
+## V2 Expanded Runtime State
 
-- Regex fallback now extracts ALTER primary keys, resolves inherited columns, and does not carry FOREIGN KEY matching across semicolon statement boundaries.
-- Fixed accidental rejection of the checksum column by constraint-prefix matching.
-- Full-source comparison passed for table names, column names, nullability, primary-key flags and foreign-key endpoints. Type normalization and arbitrary PostgreSQL syntax equivalence are not claimed.
-- Parser tests: 6 passed. Full suite: 22 passed, 2 dependency deprecation warnings.
-- Current sample evaluation: 20 cases, model/field precision and recall 1.0, relationship validity 1.0, hallucination/over-selection/failed paths 0; p95 1.656ms.
-- Next task: prepare a larger sales-capable schema and verify ORM mapping. Default source remains unchanged.
+- Active branch: `v2`.
+- `app.main:app` keeps the focused default fixture.
+- `app.expanded:app` opts into `data/raw/odoo/schema.expanded.sql` with separate expanded ORM, graph and index paths.
+- `app.application.create_app(settings)` builds each runtime with one explicit settings instance.
+- Repository cache metadata validates source identity/content, aliases/parser/mapper/model code and artifact integrity.
+- `schema.expanded.sql` is synthetic: it preserves the larger source and appends sales/product metadata for development testing. It is not a genuine Odoo sales export.
 
-## V2 Expanded Fixture
+## Historical Verification Snapshot
 
-- Created `data/raw/odoo/schema.expanded.sql` from the unchanged full source plus five synthetic sales/product tables, not a genuine Odoo export.
-- Verified parser and ORM mapping: 173 tables/models, 1699 raw columns, 525 foreign keys; all FK endpoints valid.
-- Added test coverage for salesperson/company/currency and product-template/category links, inferred sales lines, and fallback relationship parity.
-- Added regex support for column-level REFERENCES discovered by the new fixture test.
-- Parser tests: 7 passed. Default API source remains the focused sample.
-- Query understanding and golden expectations still target the old product-name location. Expanded API projection is NOT VERIFIED and must not be adopted as default yet.
+Latest verified checks from the V2 work:
 
-Latest full verification: 23 tests passed, with 2 dependency deprecation warnings.
-This run took 206.15 seconds; the cause of the unusually long duration was not investigated. This is test-suite wall time, not projection request latency.
+```powershell
+.\.venv\Scripts\python.exe -m pytest
+.\.venv\Scripts\python.exe -m app.evaluation.runner
+.\.venv\Scripts\python.exe -m app.evaluation.runner --expanded
+```
 
-## V2 Schema-Aware Product Projection
+Observed historical results:
 
-- QueryUnderstandingExtractor now receives the schema from the pipeline and selects configured schema_variants only when all required fields exist.
-- Product configuration resolves names through product.product.product_tmpl_id -> product.template.name on the expanded fixture, while the focused sample retains product.product.name.
-- Expanded golden set: 6 cases, including the original Arabic demo question.
-- Expanded report: data/processed/evaluation_report.expanded.json. Model and field precision/recall 1.0, relationship validity 1.0, hallucination and over-selection 0; p95 22.342ms on this local run.
-- Verification: full suite 26 passed (3.99s, 2 dependency deprecation warnings); after adding the Arabic case, projection tests 5 passed.
-- Default API source is unchanged. Expanded projection is verified only for these six cases. Country/state/company/currency/category and explicit salesperson-name understanding remain future work.
+- Full `pytest`: 36 passed, with 2 dependency deprecation warnings.
+- Focused evaluation: 20 cases, precision/recall 1.0, relationship validity 1.0, hallucination/over-selection/failed paths 0.
+- Expanded evaluation: 14 cases, precision/recall 1.0, relationship validity 1.0, hallucination/over-selection/failed paths 0.
+- Live expanded runtime on `127.0.0.1:8002`: health ok, 173 models, Arabic customer/country and salesperson role projection verified over HTTP.
 
-## V2 Role-Scoped Projection (Latest)
+Re-run checks before claiming a new current verification snapshot.
 
-- Active branch: v2.
-- Added sales-context Arabic/English paths for customer country/region, order company/currency, product category and salesperson name.
-- QueryUnderstanding.field_paths is additive debug metadata. Every hop is validated against the active schema.
-- Projection keeps each relation occurrence separate: salesperson partner fields do not inherit customer geography fields.
-- Relation depth is enforced per path. Category requires max_depth=4. Incomplete paths are removed after budget pruning; models/metrics/debug paths match emitted selections.
-- Expanded evaluation: 14 cases; model/field precision and recall 1.0; relationship validity 1.0; hallucination/over-selection/failed paths 0; p95 26.69ms.
-- Focused evaluation: 20 cases; precision/recall 1.0, zero hallucination/over-selection/failed paths (regression tested).
-- Full tests: 31 passed, 2 dependency deprecation warnings, 5.76s.
-- Command: python -m app.evaluation.runner --expanded. Builds metadata in memory without overwriting focused caches.
-- Default API source remains schema.sql. Arbitrary language ambiguity is not resolved; Ahmed still follows the existing salesperson filter rule.
-- Next: opt-in expanded API runtime with source-specific caches and integration tests, then broader Arabic coverage before default adoption.
+## Current Plan
 
-## V2 Expanded API Runtime (Latest)
+The synchronized plan marks the following as done:
 
-- Added app.application.create_app(settings) so each app builds its pipeline and routers with the same explicit settings.
-- app.main:app keeps the default fixture. app.expanded:app opts into schema.expanded.sql, .expanded.json ORM/graph files and data/indexes/expanded.
-- Repository cache metadata now validates source identity and content hashes, including SQL/parser/mapper/models/aliases and the artifact. Ignored local .metadata.json files prevent source switching from accidentally reusing another schema.
-- Graph write failures are logged instead of silently discarded.
-- Verified full pytest: 36 passed, 2 dependency deprecation warnings, 7.22s.
-- Live expanded server started on 127.0.0.1:8002. Health returned ok, model list returned 173, and Arabic customer/country/salesperson HTTP request returned correct separate branches, zero hallucination and 30.437ms pipeline latency.
-- Existing server on 8001 was left running. The server on 8002 was started without auto-reload; README includes a reload command for manual development runs.
-- Current V2 changes remain local/uncommitted. Next: expand Arabic/ambiguous-query and budget coverage, review remaining mapper scale limitations, and obtain an authentic sales-enabled Odoo export before claiming genuine ORM fidelity.
+- Foundation, parser, ORM mapper, graph, retrieval, query projection pipeline and API.
+- Request protection, timeout/rate-limit tests and evaluation reports.
+- Codex instruction layer.
+- V1/V2 branch work and V2 push.
+- Opt-in expanded runtime and source-isolated cache behavior.
+
+Remaining work is grouped under:
+
+- Arabic query understanding expansion.
+- Ambiguity handling.
+- Budget and negative-case coverage.
+- Mapper fidelity review.
+- Authentic Odoo sales schema acquisition and validation.
+- Dense retrieval decision after a larger authentic schema exists.
+
+## Arabic Typo And Out-of-Domain Guard
+
+- Added conservative fuzzy alias matching with `rapidfuzz` inside query understanding.
+- Fuzzy matching is restricted to configured aliases and records matched terms in debug metadata.
+- Single-word aliases now match full tokens only; phrase aliases may match within the normalized query.
+- Projection responses now include additive fields: `supported` and `unsupported_reason`.
+- Out-of-domain questions such as `ماهي تكنولوجيا المعلومات` return `supported=false`, `models=[]`, and `schema={}` with HTTP `200 OK`.
+- Ambiguous person-only questions such as `اعطني معلومات احمد` no longer fallback to `sale.order` without a sales/customer/salesperson context.
+- Targeted verification passed: 26 tests in `tests/test_query_understanding.py`, `tests/test_projection.py`, and `tests/test_api.py`.
+- Full verification after this change: targeted tests 26 passed, full pytest 42 passed, expanded evaluation 14 cases with precision/recall 1.0, hallucination/over-selection/failed paths 0, p95 26.28ms.

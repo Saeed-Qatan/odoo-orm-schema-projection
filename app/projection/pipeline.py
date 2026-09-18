@@ -45,9 +45,17 @@ class SchemaProjectionPipeline:
         )
         retrieval_ms = (perf_counter() - retrieval_started) * 1000
 
+        if not self._is_supported_query(understanding, candidates, normalized_query):
+            return self._unsupported_response(
+                query=query,
+                understanding=understanding,
+                candidates=candidates,
+                retrieval_ms=retrieval_ms,
+                started=started,
+                debug_enabled=options.debug,
+            )
+
         linked_models, linked_fields, _confidence = self.linker.link(candidates, understanding)
-        if not linked_models and self.schema.models:
-            linked_models = {next(iter(self.schema.models))}
         anchor_model = understanding.anchor_model or self._anchor_model(candidates, linked_models)
 
         graph_started = perf_counter()
@@ -133,6 +141,67 @@ class SchemaProjectionPipeline:
             )
 
         return ProjectionResponse(query=query, models=list(safe_fields.keys()), schema=projected, debug=debug)
+
+    def _is_supported_query(
+        self,
+        understanding,
+        candidates: list,
+        normalized_query: str,
+    ) -> bool:
+        if (
+            understanding.intent
+            or understanding.entities
+            or understanding.filters
+            or understanding.required_models
+            or understanding.required_fields
+            or understanding.field_paths
+        ):
+            return True
+
+        best_score = max((float(candidate.score) for candidate in candidates), default=0.0)
+        has_schema_literal = "." in normalized_query or "_" in normalized_query
+        return has_schema_literal and best_score >= 0.85
+
+    def _unsupported_response(
+        self,
+        query: str,
+        understanding,
+        candidates: list,
+        retrieval_ms: float,
+        started: float,
+        debug_enabled: bool,
+    ) -> ProjectionResponse:
+        total_fields_before = sum(len(model.fields) for model in self.schema.models.values())
+        metrics = ProjectionMetrics(
+            latency_ms=round((perf_counter() - started) * 1000, 3),
+            retrieval_ms=round(retrieval_ms, 3),
+            graph_ms=0,
+            projection_ms=0,
+            total_fields_before=total_fields_before,
+            total_fields_after=0,
+            reduction_ratio=1.0 if total_fields_before else 0,
+            hallucinated_models=0,
+            hallucinated_fields=0,
+        )
+        debug = None
+        if debug_enabled:
+            debug = ProjectionDebug(
+                query_understanding=understanding,
+                retrieval=candidates,
+                paths=[],
+                relationship_paths=[],
+                removed_fields=[],
+                confidence=self._confidence(candidates, {}, []),
+                metrics=metrics,
+            )
+        return ProjectionResponse(
+            query=query,
+            supported=False,
+            unsupported_reason="Query is outside the supported Odoo schema projection domain.",
+            models=[],
+            schema={},
+            debug=debug,
+        )
 
     def _connect_field_paths(
         self, field_paths: list[list[str]]

@@ -2,62 +2,77 @@
 
 ## Current Progress Snapshot
 
-The project is currently stabilizing the backend prototype and organizing repository-local Codex instructions.
+This repository is on branch `v2`.
 
-Confirmed current state from repository files:
+The backend prototype is stable enough for focused and opt-in expanded schema testing. The current source of truth for the project plan is this file:
 
-- The backend prototype exists and is split into clear layers.
-- The core API is implemented with FastAPI.
-- The small `schema.sql` file is the default runtime schema source.
-- `schema.full.sql` exists for parser experiments, but it is not the current demo source.
-- Aliases now live in `data/config/schema_aliases.json` instead of relying only on hardcoded rules.
-- `pglast` is used as the primary parsing path with a regex fallback.
-- Graph traversal and field-level pruning exist.
-- The evaluation runner and golden set exist.
-- Latest verified checks: `pytest` passed, and evaluation ran on 20 cases with no hallucination or over-selection.
-- Current work is focused on documentation and Codex instructions, then backend development continues.
+```text
+.agents/PLAN.md
+```
 
-## Summary
+The root `plan.md` file was removed intentionally. Do not recreate it unless the project plan ownership decision changes.
 
-We are building a Python/FastAPI backend that reads an Odoo PostgreSQL `schema.sql`, converts it into an Odoo-like `ORM-like Schema`, builds a relationship graph, then receives a user query and returns the smallest hierarchical schema needed to answer that query.
+Confirmed progress:
 
-The goal is not to send the full Odoo schema to an LLM. The goal is to project a small, accurate schema subset based on the question.
+- The default focused API runtime is implemented and remains unchanged.
+- The opt-in expanded API runtime is implemented for broader schema testing.
+- The parser uses `pglast` first and keeps a regex fallback.
+- ORM-like mapping, graph construction, retrieval, linking, traversal, pruning, projection, validation, API endpoints, evaluation, and instruction files exist.
+- Expanded V2 changes were committed and pushed to remote branch `v2`.
+- The expanded schema is synthetic: it is useful for development tests, but it is not a genuine Odoo sales export.
 
-Success criteria:
+Latest verified snapshot from repository history:
 
-- Local response latency stays below `1500ms` on the golden set.
+- Full test suite: `36 passed`, with two dependency deprecation warnings.
+- Default evaluation: 20 cases, zero hallucination, zero over-selection, zero failed paths.
+- Expanded evaluation: 14 cases, zero hallucination, zero over-selection, zero failed paths.
+- Live expanded runtime check on `127.0.0.1:8002`: health ok, 173 models, and Arabic role projection returned separate customer/country and salesperson branches.
+
+These are historical verified results. Re-run the checks before claiming a new current verification snapshot.
+
+## Product Goal
+
+Build a Python/FastAPI backend that reads an Odoo-like PostgreSQL schema, converts it into an ORM-like representation, builds a relationship graph, then receives a user query and returns only the smallest hierarchical schema subset needed to answer that query.
+
+The system should avoid sending a full Odoo schema to an LLM. It should project only the relevant models, fields, and relationship paths.
+
+Example user query:
+
+```text
+أعطني مبيعات أحمد في أغسطس مع اسم العميل والمنتج والكمية
+```
+
+Expected projection shape:
+
+```text
+sale.order
+├── date_order
+├── user_id
+├── partner_id -> res.partner.name
+└── sale_order_line_ids -> sale.order.line
+    ├── product_uom_qty
+    └── product_id -> product.product.name
+```
+
+In the expanded runtime, product name may be resolved through:
+
+```text
+sale.order.line.product_id -> product.product.product_tmpl_id -> product.template.name
+```
+
+depending on the active schema source.
+
+## Success Criteria
+
 - `hallucinated_models = 0`.
 - `hallucinated_fields = 0`.
-- Output relationships must be real or clearly inferred from foreign keys.
-- Traversal must be query-guided and must not expand into unrelated models.
-- Pruning must happen at the field level, not only at the model level.
+- Relationship paths are valid and come from the ORM-like schema.
+- Traversal is query-guided and does not expand into unrelated branches.
+- Pruning happens at field level, not only at model level.
+- Local P95 latency stays below `1500ms` on supported golden sets.
+- Debug output explains understanding, selected paths, removed fields, metrics, and latency.
 
-## Lessons From Reviewed Repositories
-
-Lessons adopted from reviewing similar projects, without documenting repository names as official source facts inside this repo:
-
-- Split the pipeline into small stages: parsing, mapping, retrieval, linking, traversal, pruning, projection.
-- Keep aliases and synonyms outside the code as much as possible so they can be expanded safely.
-- Treat retrieval as a helper, not as a final authority without validation.
-- Build evaluation early to measure hallucination, over-selection, relationship validity, and latency.
-- Keep the output hierarchical and explicit so a downstream agent or LLM can understand the relationships.
-- Prefer conservative schema projection when confidence is low instead of expanding randomly.
-
-## Libraries And Algorithms
-
-Currently used or included in the project design:
-
-- Backend: `FastAPI`, `uvicorn`, `pydantic`, `pydantic-settings`.
-- Schema parsing: `pglast` with regex fallback.
-- ORM-like mapping: table-name to Odoo-like model-name conversion, FK to `many2one`, and inferred `one2many` relations.
-- Graph: `networkx` for representing models, fields, and relationships, plus traversal/path finding.
-- Sparse retrieval: `rank-bm25`.
-- Fuzzy matching: `rapidfuzz`.
-- Hybrid retrieval structure: RRF and result merging.
-- Dense retrieval: available as an optional path, but not enabled by default.
-- Testing/evaluation: `pytest`, golden set, evaluation report.
-
-## Current Architecture
+## Architecture
 
 ```text
 HTTP Request
@@ -66,16 +81,19 @@ HTTP Request
 -> Query Understanding
 -> Retrieval
 -> Schema Linking
--> Query-Guided Graph Traversal
+-> Query-Guided Traversal
 -> Field-Level Pruning
 -> Strict Validation
 -> Hierarchical ORM Schema Projection
 ```
 
-Important files:
+Important modules:
 
 ```text
+app/application.py
 app/main.py
+app/expanded.py
+app/app_state.py
 app/api/routes/health.py
 app/api/routes/schema.py
 app/api/routes/projection.py
@@ -97,106 +115,139 @@ app/projection/pipeline.py
 app/projection/pruner.py
 app/projection/projector.py
 app/evaluation/golden_set.py
+app/evaluation/expanded_golden_set.py
 app/evaluation/metrics.py
 app/evaluation/runner.py
 ```
 
-Data sources:
+Important data files:
 
 ```text
 data/raw/odoo/schema.sql
 data/raw/odoo/schema.full.sql
+data/raw/odoo/schema.expanded.sql
 data/config/schema_aliases.json
 data/processed/odoo_orm_schema.json
 data/processed/odoo_schema_graph.json
+data/processed/odoo_orm_schema.expanded.json
+data/processed/odoo_schema_graph.expanded.json
 data/processed/evaluation_report.json
+data/processed/evaluation_report.expanded.json
 ```
 
-## What Is Done
+## Libraries And Algorithms
 
-### Phase 1 — Foundation
+- Backend: `FastAPI`, `uvicorn`, `pydantic`, `pydantic-settings`.
+- Schema parsing: `pglast` with regex fallback.
+- ORM-like mapping: table-to-model conversion, `many2one` from foreign keys, inferred `one2many` reverse relations.
+- Graph: `networkx` for relationship graph construction and traversal.
+- Sparse retrieval: `rank-bm25`.
+- Fuzzy retrieval: `rapidfuzz`.
+- Hybrid retrieval: RRF-style result merging.
+- Dense retrieval: optional and disabled by default.
+- Testing and evaluation: `pytest`, golden sets, JSON evaluation reports.
 
-- [x] Install the core backend and evaluation dependencies.
+## Lessons From Reviewed Repositories
+
+The repository does not currently document the names or exact findings from the five reviewed repositories, so this plan records only general lessons:
+
+- Split the pipeline into explicit stages.
+- Keep aliases and synonyms outside Python code when practical.
+- Treat retrieval as a helper, not as final authority.
+- Validate every selected model, field, and relationship path.
+- Measure hallucination, over-selection, relationship validity, latency, and reduction ratio early.
+- Prefer conservative projection when confidence is low.
+
+## Done
+
+### Phase 1 - Foundation
+
+- [x] Install core backend and evaluation dependencies.
 - [x] Move settings to `app/core/config.py`.
 - [x] Add `.env.example`.
 - [x] Add `GET /health`.
-- [x] Keep the operational database outside the current core pipeline.
+- [x] Keep operational database access outside the current pipeline.
 
-### Phase 2 — Schema Ingestion
+### Phase 2 - Schema Ingestion
 
-- [x] Place the default runtime schema in `data/raw/odoo/schema.sql`.
+- [x] Add focused runtime schema at `data/raw/odoo/schema.sql`.
+- [x] Add full parser experiment source at `data/raw/odoo/schema.full.sql`.
+- [x] Add synthetic expanded source at `data/raw/odoo/schema.expanded.sql`.
 - [x] Build `PostgresSqlSchemaAdapter`.
-- [x] Enable `pglast` as the primary parsing path.
-- [x] Keep regex fallback when advanced parsing fails.
-- [x] Extract tables, columns, types, primary keys, and foreign keys.
-- [x] Represent the raw schema with Pydantic models.
+- [x] Parse with `pglast` first.
+- [x] Keep regex fallback.
+- [x] Extract tables, columns, primary keys, foreign keys, inherited columns, and column-level references.
+- [x] Add tests for parser behavior and fallback parity.
 
-### Phase 3 — ORM-like Schema Mapping
+### Phase 3 - ORM-like Mapping
 
 - [x] Build `OrmMapper`.
-- [x] Convert table names into Odoo-like models such as `sale.order` and `res.partner`.
+- [x] Convert table names into Odoo-like model names.
 - [x] Convert foreign keys into `many2one` fields.
 - [x] Infer reverse `one2many` fields with `inferred=true`.
-- [x] Save output to `data/processed/odoo_orm_schema.json`.
-- [x] Generate hierarchy at request time instead of storing repeated hierarchy.
+- [x] Save generated ORM schema artifacts.
+- [x] Add source-specific cache metadata and artifact hash validation.
 
-### Phase 4 — Schema Graph
+### Phase 4 - Schema Graph
 
 - [x] Build `SchemaGraphBuilder` with `networkx`.
-- [x] Represent models, fields, and relationships as nodes and edges.
-- [x] Build `GraphTraverser` for paths and bounded-depth traversal.
-- [x] Save graph snapshot to `data/processed/odoo_schema_graph.json`.
+- [x] Represent models, fields, and relationships.
+- [x] Build bounded traversal helpers.
+- [x] Save graph snapshots for focused and expanded runtimes.
 
-### Phase 5 — Retrieval And Aliases
+### Phase 5 - Retrieval And Aliases
 
-- [x] Build a searchable corpus for models and fields.
-- [x] Build `BM25Retriever`.
-- [x] Build `FuzzyRetriever`.
-- [x] Build hybrid retrieval structure and RRF.
+- [x] Build searchable schema corpus.
+- [x] Build BM25 retriever.
+- [x] Build fuzzy retriever.
+- [x] Build hybrid/RRF result merging.
 - [x] Move aliases to `data/config/schema_aliases.json`.
-- [x] Add `AliasCatalog` to load aliases from JSON.
-- [~] Dense retrieval exists as an optional path, but it is not the default and has not been adopted as a production path.
+- [x] Add schema-aware alias variants and explicit field paths.
+- [~] Keep dense retrieval available but disabled by default.
 
-### Phase 6 — Query Pipeline
+### Phase 6 - Query Projection Pipeline
 
 - [x] Build `SchemaProjectionPipeline`.
-- [x] Build `QueryUnderstandingExtractor` for intent, entities, filters, and requested fields.
-- [x] Build schema linking.
-- [x] Enable query-guided traversal guard.
-- [x] Enable field-level pruning.
-- [x] Prevent unrelated models from entering the output unless they are necessary bridge models.
-- [x] Return hierarchical ORM schema output.
-- [x] Prevent unknown models and fields from being returned.
+- [x] Build query understanding for intent, entities, filters, fields, and explicit field paths.
+- [x] Validate field paths against the active schema.
+- [x] Link query concepts to schema candidates.
+- [x] Enforce query-guided traversal.
+- [x] Enforce depth and budget limits.
+- [x] Prune fields after traversal.
+- [x] Preserve role-scoped relationship occurrences so customer partner fields do not leak into salesperson partner fields.
+- [x] Remove incomplete paths after budget pruning.
+- [x] Return hierarchical JSON schema output.
 
-### Phase 7 — API
+### Phase 7 - API
 
 - [x] Add `POST /api/v1/project-schema`.
 - [x] Add `GET /api/v1/schema/models`.
 - [x] Add `GET /api/v1/schema/models/{model_name}`.
-- [x] Support `debug` output for query understanding, paths, removed fields, and metrics.
+- [x] Add debug output for understanding, paths, removed fields, metrics, and latency.
+- [x] Add `app.application.create_app(settings)`.
+- [x] Keep `app.main:app` as the focused runtime.
+- [x] Add `app.expanded:app` as the opt-in expanded runtime.
 
-### Phase 8 — Quality, Speed, Hallucination Control
+### Phase 8 - Protection And Runtime Behavior
 
-- [x] Load schema and graph from files/memory instead of rebuilding them unpredictably inside request logic.
-- [x] Prevent dense indexes from being built during the default request path.
-- [x] Add over-selection guard inside traversal/pruning.
-- [x] Add confidence/debug structures.
-- [x] Measure latency, reduction, and hallucination in debug/evaluation.
-- [x] Strict request timeout is verified by a test that returns `504` when the timeout is exceeded.
-- [x] Rate limiting is verified by `429` tests on projection and schema read endpoints.
+- [x] Add rate limiting tests for projection and schema read endpoints.
+- [x] Add query length and budget limit tests.
+- [x] Add timeout handling that returns `504`.
+- [x] Prevent accidental cache reuse across different schema sources.
+- [x] Log graph snapshot write failures instead of silently swallowing them.
 
-### Phase 9 — Evaluation
+### Phase 9 - Evaluation
 
-- [x] Create a golden set of 20 questions.
-- [x] Define expected models, fields, and relationship paths.
+- [x] Add default golden set with 20 cases.
+- [x] Add expanded golden set with 14 cases.
 - [x] Measure model precision/recall.
-- [x] Measure field precision/recall on nested fields.
+- [x] Measure nested field precision/recall.
 - [x] Measure relationship validity.
 - [x] Measure reduction ratio and latency p50/p95.
-- [x] Measure hallucination and over-selection.
-- [x] Generate `data/processed/evaluation_report.json`.
+- [x] Measure hallucination, over-selection, and failed paths.
+- [x] Generate default and expanded JSON evaluation reports.
 
-### Phase 10 — Codex Instruction Layer
+### Phase 10 - Codex Instruction Layer
 
 - [x] Create `AGENTS.md`.
 - [x] Create `.agents/PROJECT.md`.
@@ -205,90 +256,117 @@ data/processed/evaluation_report.json
 - [x] Create `.agents/CURRENT_STATE.md`.
 - [x] Create `.agents/TASKS.md`.
 - [x] Create `.agents/PLAN.md`.
-- [x] Remove the old nested structure from the intended plan.
-- [~] Commit/push documentation changes is still required after final review.
+- [x] Remove old nested instruction directories from the intended structure.
+- [x] Remove root `plan.md` and keep `.agents/PLAN.md` as the only official plan source.
+
+### Phase 11 - V1 And V2 Git State
+
+- [x] Save previous stable backend snapshot on remote branch `v1`.
+- [x] Create branch `v2` for schema expansion work.
+- [x] Commit expanded runtime and schema work on `v2`.
+- [x] Push `v2` to the remote repository.
 
 ## Current Phase
 
-The current phase is V2 schema expansion with an independently verified opt-in expanded API runtime.
+The current phase is V2 expansion hardening.
 
-The next goal is broader Arabic and ambiguous-query coverage, budget behavior review, and mapper fidelity checks before adopting a larger source by default. Keep this plan synchronized with verified progress.
+The project can now test broader schema relationships through the opt-in expanded runtime, but it should not claim full Odoo fidelity yet because the sales/product additions in `schema.expanded.sql` are synthetic.
 
-## Next Steps
+## Next Development Steps
 
-### Documentation Stabilization
+### Step 1 - Synchronize Documentation
 
-- [ ] Review `.agents/PLAN.md` after updates.
-- [ ] Update `.agents/CURRENT_STATE.md` if project state changes after accepting the plan.
-- [ ] Commit/push instruction and documentation changes on branch `develop`.
+- [x] Review `.agents/PLAN.md` against actual V2 progress.
+- [x] Update stale statements about uncommitted/unpushed work.
+- [x] Make the completed and remaining work explicit.
 
-### Backend Hardening
+### Step 2 - Arabic Query Understanding Expansion
 
-- [x] Review `app/core/rate_limit.py` and verify that rate limiting is active on endpoints.
-- [x] Add request-limit tests for query length and clamping of `max_depth`, `max_models`, and `max_total_fields`.
-- [x] Verify internal request timeout with a `504` test and fix `asyncio.TimeoutError` handling.
-- [x] Add protection and limit tests in `tests/test_api.py` and `tests/test_projection.py`.
+- [x] Add more Arabic aliases for common misspellings and variants.
+- [x] Add tests for typo-like cases such as `المندو` vs `المندوب`.
+- [ ] Improve role detection for salesperson, customer, country, branch, company, currency, category, product, quantity, status, total, and date.
+- [x] Keep new Arabic aliases in `data/config/schema_aliases.json`; Python logic is limited to conservative fuzzy matching.
 
-### Odoo Scale Preparation
+### Step 3 - Ambiguity Handling
 
-- [ ] Prepare a larger schema that contains real sales models instead of only the focused sample.
-- [ ] Verify that the parser handles the larger schema without breaking.
-- [ ] Expand aliases to cover more Odoo scenarios.
-- [ ] Expand the golden set after introducing the larger schema.
-- [ ] Run evaluation and compare p50/p95 latency, hallucination, and over-selection.
+- [ ] Decide how to represent ambiguous phrases such as `أحمد`: customer, salesperson, or generic person filter.
+- [ ] Add debug output that exposes ambiguity when confidence is not enough.
+- [ ] Add golden cases for ambiguous and partially understood Arabic questions.
+- [x] Avoid expanding unrelated schema branches when ambiguity exists.
 
-### Retrieval Improvements
+### Step 4 - Budget And Negative-Case Coverage
 
-- [ ] Keep dense retrieval disabled by default until there is a proven need.
-- [ ] Evaluate dense retrieval on the golden set after introducing the larger schema.
-- [ ] Adopt dense retrieval only if it improves recall without unacceptable hallucination or latency cost.
+- [ ] Add tests for low `max_depth`, `max_models`, and `max_total_fields` on expanded relationship paths.
+- [ ] Add tests for unsupported requests and unfulfillable paths.
+- [ ] Confirm incomplete paths are removed consistently from output and debug.
 
-## Test Plan
+### Step 5 - Mapper Fidelity Review
 
-For the current plan/documentation update:
+- [ ] Review whether current field naming and inferred reverse relation naming are close enough to Odoo expectations.
+- [ ] Document known differences between synthetic fixture behavior and real Odoo schema behavior.
+- [ ] Add mapper tests for any confirmed fidelity gaps.
 
-- [ ] Read `.agents/PLAN.md` after modification.
-- [ ] Confirm completed items are marked with `[x]`.
-- [ ] Confirm partially completed items are marked with `[~]`.
-- [ ] Confirm next items are marked with `[ ]`.
-- [ ] Confirm changes are limited to documentation files.
+### Step 6 - Authentic Odoo Sales Schema
 
-For backend development:
+- [ ] Obtain or generate an authentic Odoo schema export that contains sales, product, partner, user, company, currency, stock, purchase, and accounting metadata.
+- [ ] Parse it without replacing the current default until evaluation passes.
+- [ ] Compare latency, hallucination, over-selection, and relationship validity against focused and expanded fixtures.
+- [ ] Adopt a larger default schema only after tests and evaluation support it.
+
+### Step 7 - Dense Retrieval Decision
+
+- [ ] Keep dense retrieval disabled by default.
+- [ ] Evaluate dense retrieval only after the authentic larger schema exists.
+- [ ] Adopt dense retrieval only if it improves recall without increasing hallucination or unacceptable latency.
+
+## Newly Implemented Behavior
+
+- Arabic typo handling now uses conservative `rapidfuzz` matching against configured aliases only.
+- Debug understanding can include `matched_terms` with input token, matched alias, target entity, score and match type.
+- Projection responses now include additive fields: `supported` and `unsupported_reason`.
+- Out-of-domain questions return HTTP `200 OK` with `supported=false`, `models=[]`, and `schema={}`.
+- The pipeline no longer falls back to `sale.order` or the first schema model for unsupported questions.
+## Runtime Commands
+
+Focused runtime:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
+```
+
+Expanded runtime:
+
+```powershell
+.\.venv\Scripts\python.exe -m uvicorn app.expanded:app --host 127.0.0.1 --port 8002 --reload
+```
+
+Default evaluation:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.evaluation.runner
+```
+
+Expanded evaluation:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.evaluation.runner --expanded
+```
+
+Tests:
 
 ```powershell
 .\.venv\Scripts\python.exe -m pytest
-.\.venv\Scripts\python.exe -m app.evaluation.runner
 ```
 
 ## Assumptions And Decisions
 
-- The project is backend-only in this phase.
-- We do not generate Odoo domains yet.
-- We do not execute SQL from the user query.
-- We do not connect to an operational ERP database.
-- We do not add dependencies without a clear reason.
-- `data/raw/odoo/schema.sql` is the current default runtime source.
-- `data/raw/odoo/schema.full.sql` is not the current demo source because, as-is, it does not support the current sales questions.
-- `.agents/PLAN.md` is the only accepted plan source for this repository.
-- Details of the five reviewed repositories are not documented inside this repo, so the plan records only general lessons without names or unverified claims.
-
-
-## V2 Progress Update
-
-- [x] Inspect the larger source and identify missing sales/product tables.
-- [x] Verify the larger source through pglast after fixing ALTER defaults, primary keys and inherited columns.
-- [x] Harden regex fallback for ALTER primary keys, inheritance and statement boundaries on the existing full source.
-- [ ] Prepare a larger sales-capable source and verify ORM mapping and projection quality.
-
-Current development branch is `v2`. The instruction layer and v1 backend snapshot were committed and pushed on `v1`; earlier develop/documentation-pending entries above are historical.
-
-## V2 Sales-Capable Fixture Progress
-
-- [x] Prepare `schema.expanded.sql`: existing full source plus explicitly synthetic sales/product metadata.
-- [x] Verify parser and ORM mapper relationships on the expanded fixture.
-- [x] Adapt product-name understanding to template paths without breaking the focused sample.
-- [x] Add explicit salesperson-name understanding with role-specific relationship paths.
-- [x] Add initial sales-context aliases and golden tests for country, region, order company/currency and product category.
-- [x] Evaluate six initial expanded projection cases; default remains unchanged.
-- [x] Expand evaluation to 14 initial role-specific cases.
-- [x] Verify opt-in expanded API runtime and source-specific cache isolation; default fixture stays unchanged.
+- This phase is backend-only. No project UI is planned.
+- Swagger `/docs` is FastAPI's built-in API documentation, not a custom UI.
+- The backend returns schema metadata, not real sales records.
+- The backend does not execute SQL from user queries.
+- The backend does not connect to an operational ERP database.
+- The backend does not generate Odoo domains yet.
+- `data/raw/odoo/schema.sql` remains the focused default source.
+- `data/raw/odoo/schema.expanded.sql` is opt-in and synthetic.
+- `.agents/PLAN.md` is the only accepted plan source.
+- Details of the five reviewed repositories are not documented in this repo, so this plan records general lessons only.

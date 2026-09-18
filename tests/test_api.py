@@ -142,3 +142,20 @@ def test_expanded_application_api_uses_isolated_artifacts(tmp_path) -> None:
         assert 'name' in fields['sale_order_line_ids']['fields']['product_id']['fields']['product_tmpl_id']['fields']
     assert settings.orm_schema_path.exists()
     assert settings.graph_path.exists()
+
+
+def test_project_schema_out_of_domain_returns_200_unsupported() -> None:
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/project-schema",
+        json={"query": "ماهي تكنولوجيا المعلومات", "options": {"debug": True}},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["supported"] is False
+    assert payload["unsupported_reason"] == "Query is outside the supported Odoo schema projection domain."
+    assert payload["models"] == []
+    assert payload["schema"] == {}
+    assert payload["debug"]["metrics"]["hallucinated_models"] == 0
+    assert payload["debug"]["metrics"]["hallucinated_fields"] == 0
